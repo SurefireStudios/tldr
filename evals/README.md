@@ -19,6 +19,24 @@ The scoring contract is [`rubric.md`](rubric.md). The cases are [`cases.jsonl`](
 
 Task prompts are identical across conditions. Only the injected instruction differs, so the comparison measures the instruction and nothing else.
 
+## The short version
+
+```bash
+scripts/run_full_eval.sh --smoke   # 2 cases, 1 trial, cheap model - proves the wiring
+scripts/run_full_eval.sh           # the real run: 16 cases, 3 trials, sonnet
+```
+
+The driver runs validate, both conditions, the blind judge, the release gate and
+the token count in order, and refuses to start if the CLI is logged out rather
+than generating 144 identical auth failures. Every stage is resumable: rerun the
+same command after a failure and completed rows are skipped, not repaid for.
+
+Always do the smoke run first. It costs cents and catches the things that waste a
+full run - a logged-out CLI, a bad model pin, a runner whose flags changed.
+
+The sections below are the same pipeline, stage by stage, for when you want to
+vary one part of it.
+
 ## Validate and plan
 
 Neither command touches the network.
@@ -49,9 +67,25 @@ python3 scripts/run_evals.py run \
   --output evals/results/responses.jsonl
 ```
 
+Add `--limit 2` or `--cases destructive-action,security-finding` to run a subset. Use that to iterate on a rule without paying for the whole set each time.
+
 Runs are resumable: rerun the same command after a provider failure and completed `(case, trial, condition, runner)` rows are skipped. Each incomplete call is retried twice by default and the final provider error is preserved in the output.
 
-### Isolation is not optional
+### Which runner
+
+`runners.example.json` ships three Claude runners. They differ only in the pinned model.
+
+| Runner | Use it for |
+| --- | --- |
+| `claude-haiku` | Smoke runs. Never publish a headline number from it - a style skill behaves differently on a small model. |
+| `claude` | The default. Sonnet: cheap enough to iterate on, and close to what most users actually run. |
+| `claude-opus` | The headline published run. Roughly five times the cost of the default. |
+
+Prompts go to the runner on **stdin**, not as an argument. Judge prompts carry the
+rubric plus every response for a case and can exceed the Windows command-line
+length limit; stdin has no such cap.
+
+## Isolation is not optional
 
 Both example runners isolate the call from the operator's own agent configuration: `--setting-sources ""` for Claude, `--ignore-user-config --ephemeral` for Codex. Keep that isolation when adding a runner. Without it, user-level plugins, hooks, memory, and output styles leak into every condition and shape the responses being judged.
 

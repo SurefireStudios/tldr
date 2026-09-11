@@ -2,33 +2,56 @@
   "claude": {
     "command": [
       "claude",
-      "-p",
-      "{prompt}",
+      "--print",
       "--model",
-      "claude-opus-4-8",
+      "claude-sonnet-5",
       "--setting-sources",
       ""
     ],
-    "notes": "--setting-sources '' isolates the call from the operator's own plugins, hooks, memory, and output styles. Without it, a user-level always-on flag (~/.claude/.tldr-always) would inject the tldr ruleset into the BASELINE condition and the eval would measure the skill against itself. --model is pinned deliberately: without a pin the eval silently runs whatever the operator or the CLI release defaults to, so the model varies between operators and over time, and per-token cost varies with it."
+    "stdin": true,
+    "notes": "Prompts arrive on stdin rather than as an argument. Judge prompts carry the rubric plus every response for a case and can run past 30k characters, which exceeds the Windows command-line limit; stdin has no such cap. --setting-sources '' isolates the call from the operator's own plugins, hooks, memory, and output styles. Without it, a user-level always-on flag (~/.claude/.tldr-always) would inject the tldr ruleset into the BASELINE condition and the eval would measure the skill against itself. --model is pinned deliberately: isolation also drops the operator's saved model setting, so without a pin the eval silently runs whatever the CLI happens to default to, varying between operators and over time, and per-token cost varies with it. Record the pinned model with any published numbers."
+  },
+  "claude-opus": {
+    "command": [
+      "claude",
+      "--print",
+      "--model",
+      "claude-opus-5",
+      "--setting-sources",
+      ""
+    ],
+    "stdin": true,
+    "notes": "Same runner against the stronger model. Roughly five times the cost of the sonnet runner for the same case set. Worth it for a headline published number; the sonnet runner is the sensible default for iterating on the skill, and is closer to what most users actually run."
+  },
+  "claude-haiku": {
+    "command": [
+      "claude",
+      "--print",
+      "--model",
+      "claude-haiku-4-5-20251001",
+      "--setting-sources",
+      ""
+    ],
+    "stdin": true,
+    "notes": "Cheap runner for smoke-testing the harness end to end before committing to a full run. Do not publish numbers from this one as a headline result: a style skill behaves differently on a small model, and the comparison is only meaningful against the model you actually claim it for."
   },
   "codex": {
     "command": [
       "codex",
       "exec",
-      "{prompt}",
       "--ignore-user-config",
       "--ephemeral"
     ],
+    "stdin": true,
     "notes": "--ignore-user-config --ephemeral is the Codex equivalent of the isolation above. Keep it."
   },
   "gemini": {
     "command": [
       "gemini",
-      "-p",
-      "{prompt}",
       "--model",
       "gemini-3-pro"
     ],
-    "notes": "Gemini CLI loads GEMINI.md from the working directory. Run this harness from a directory that does not contain one, or the context file leaks into every condition."
+    "stdin": true,
+    "notes": "Gemini CLI loads GEMINI.md from the working directory. Run this harness from a directory that does not contain one, or the context file leaks into every condition. Note that this repository ships a GEMINI.md at its root."
   }
 }

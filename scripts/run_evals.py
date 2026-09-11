@@ -333,6 +333,19 @@ def cmd_run(args: argparse.Namespace) -> int:
     cases = load_cases()
     runners = load_runners()
 
+    if args.cases:
+        wanted = {c.strip() for c in args.cases.split(",") if c.strip()}
+        unknown = wanted - {c.id for c in cases}
+        if unknown:
+            raise EvalError(f"unknown case id(s): {sorted(unknown)}")
+        cases = [c for c in cases if c.id in wanted]
+
+    if args.limit:
+        cases = cases[: args.limit]
+
+    if args.limit or args.cases:
+        print(f"running a subset: {len(cases)} case(s) - {', '.join(c.id for c in cases)}")
+
     if args.runner not in runners:
         raise EvalError(
             f"Unknown runner {args.runner!r}. Available: {', '.join(sorted(runners))}"
@@ -519,6 +532,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--output", default="evals/results/responses.jsonl")
     run.add_argument("--timeout", type=int, default=300)
     run.add_argument("--retries", type=int, default=2)
+    run.add_argument("--limit", type=int, help="Only run the first N cases. Use for a cheap smoke run.")
+    run.add_argument("--cases", help="Comma-separated case ids to run instead of the whole set.")
     run.set_defaults(func=cmd_run)
 
     score = sub.add_parser("score", help="Apply the release gate to a scores file")
