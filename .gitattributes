@@ -1,0 +1,12 @@
+# Normalize to LF in the repository and on checkout.
+#
+# This is load-bearing, not cosmetic: scripts/check_mirrors.py compares the
+# canonical skill to its mirrors by SHA-256 of the raw bytes, and
+# tests/test_always_on_hooks.py asserts that the Node, sh, and PowerShell hooks
+# emit the same body byte for byte. A CRLF checkout on Windows would break both.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
