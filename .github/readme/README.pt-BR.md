@@ -148,6 +148,18 @@ Há um arcabouço de avaliação reproduzível em [`evals/`](../../evals/) que m
 - **Qualidade** — correção, fidelidade, acionabilidade e segurança, avaliadas às cegas contra uma linha de base.
 - **Tokens** — contagem real de tokens de saída, porque o objetivo da compressão é custo.
 
+Medido em 16 casos × 3 tentativas contra uma linha de base sem skill (`claude-sonnet-5`):
+
+| | Linha de base | Com tldr | |
+| --- | ---: | ---: | --- |
+| Tokens de saída (média) | 370 | **283** | −24% |
+| Mediana | 322 | **175** | −46% |
+| Agente para agente | 208 | **101** | −51% |
+| Acionabilidade | 4.375 | **4.688** | +0.312 |
+| Fidelidade | 4.667 | **4.542** | **−0.125** |
+
+**O critério de publicação está em FAILED**, em 2 de 5 regras: a fidelidade fica 0.025 fora da tolerância. Essa falha fica registrada em vez de ser ajustada para sumir — fidelidade existe justamente para pegar uma resposta que parece melhor só porque descartou algo, e no momento está pegando esta skill.
+
 Publicar só uma delas é exatamente como afirmações sobre compressão acabam enganando. Metodologia e critérios em [`evals/RESULTS.md`](../../evals/RESULTS.md). Os números são publicados independentemente de favorecerem a skill.
 
 ## Agentes suportados

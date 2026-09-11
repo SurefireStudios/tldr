@@ -148,6 +148,18 @@ Hay un arnés de evaluación reproducible en [`evals/`](../../evals/) que mide d
 - **Calidad** — corrección, fidelidad, accionabilidad y seguridad, evaluadas a ciegas contra una línea base.
 - **Tokens** — recuento real de tokens de salida, porque el sentido de comprimir es el coste.
 
+Medido sobre 16 casos × 3 ensayos contra una línea base sin skill (`claude-sonnet-5`):
+
+| | Línea base | Con tldr | |
+| --- | ---: | ---: | --- |
+| Tokens de salida (media) | 370 | **283** | −24% |
+| Mediana | 322 | **175** | −46% |
+| Agente a agente | 208 | **101** | −51% |
+| Accionabilidad | 4.375 | **4.688** | +0.312 |
+| Fidelidad | 4.667 | **4.542** | **−0.125** |
+
+**El criterio de publicación marca actualmente FAILED**, en 2 de 5 reglas: la fidelidad se queda a 0.025 del margen. Ese fallo se deja tal cual en vez de ajustarlo para que desaparezca — la fidelidad existe precisamente para detectar una respuesta que parece mejor solo porque eliminó algo, y ahora mismo está detectando esta skill.
+
 Publicar solo una de las dos es como las afirmaciones sobre compresión acaban siendo engañosas. Metodología y criterios de publicación en [`evals/RESULTS.md`](../../evals/RESULTS.md). Los números se publican tanto si favorecen a la skill como si no.
 
 ## Agentes compatibles

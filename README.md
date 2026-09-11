@@ -184,20 +184,33 @@ The governing rule, in the skill's own words: *a reader who reads only the TL;DR
 
 ## Does it actually work?
 
-There is a reproducible eval harness in [`evals/`](evals/) that measures two things most output-style prompts never measure together:
+Partly. Here are the numbers, and the part that does not pass yet.
 
-- **Quality** — correctness, **fidelity**, actionability, safety, and concision, graded blind against a baseline.
-  Fidelity is weighted at 25% specifically to catch a response that looks better only because it deleted something.
-- **Tokens** — actual output-token counts, because the entire point of compression is cost.
+Measured on 16 cases × 3 trials against `claude-sonnet-5`, blind-graded against a no-skill baseline:
 
-Run it yourself:
+| | Baseline | With `tldr` | |
+| --- | ---: | ---: | --- |
+| Mean output tokens | 370 | **283** | −24% |
+| Median output tokens | 322 | **175** | −46% |
+| Agent-to-agent output | 208 | **101** | −51% |
+| Actionability | 4.375 | **4.688** | +0.312 |
+| Concision | 3.646 | **4.500** | +0.854 |
+| Safety | 4.625 | **4.646** | +0.021 |
+| Correctness | 4.896 | 4.833 | −0.062 |
+| **Fidelity** | 4.667 | **4.542** | **−0.125** |
+
+**The release gate currently reads FAILED**, on two of five rules: fidelity is 0.025 outside tolerance, and one trial in three of one case still misbehaves. Three rules pass, and weighted quality beats baseline by +0.101.
+
+That failure is left in place rather than tuned away. Fidelity is the dimension that exists to catch a response which looks better only because it dropped something, and it is currently catching this skill — the cause is a rule added to save tokens that reads as "write less" where it meant "drop the scaffolding". [`evals/RESULTS.md`](evals/RESULTS.md) has the diagnosis, the per-case numbers, and every superseded run.
+
+Reproduce it:
 
 ```bash
-python3 scripts/run_evals.py validate
-python3 scripts/run_evals.py plan --trials 3
+scripts/run_full_eval.sh --smoke   # cheap, proves the wiring
+scripts/run_full_eval.sh           # the real thing
 ```
 
-Results, methodology, and the release gate live in [`evals/RESULTS.md`](evals/RESULTS.md). Numbers there are published whether or not they flatter the skill — including runs that fail the gate.
+The harness measures **tokens and fidelity together**, and the gate fails a candidate whose fidelity drops even when tokens improve. A compression claim without that second number is not a result, which is why it is not offered as one here.
 
 ## Supported agents
 
