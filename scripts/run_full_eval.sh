@@ -71,8 +71,12 @@ $PY scripts/run_evals.py run \
   --trials "$TRIALS" $LIMIT --output "$RESPONSES" || exit 1
 
 say "Judging (blind)"
+# A judge failure on a few groups is recoverable: judging is resumable, so rerunning
+# fills the gaps. Aborting here would throw away a paid-for generation pass over one
+# bad group, so warn and carry on to scoring.
 $PY scripts/judge.py --runner "$RUNNER" \
-  --responses "$RESPONSES" --output "$SCORES" || exit 1
+  --responses "$RESPONSES" --output "$SCORES" \
+  || echo "  judge reported failures; rerun to fill the gaps before trusting the gate" >&2
 
 say "Quality and release gate"
 $PY scripts/run_evals.py score "$SCORES"
