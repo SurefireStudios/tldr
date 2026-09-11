@@ -54,8 +54,10 @@ MSG
   exit 1
 fi
 
-say "Plan"
-$PY scripts/run_evals.py plan --trials "$TRIALS"
+if [ -z "$LIMIT" ]; then
+  say "Plan"
+  $PY scripts/run_evals.py plan --trials "$TRIALS"
+fi
 
 say "Generating: baseline"
 $PY scripts/run_evals.py run \

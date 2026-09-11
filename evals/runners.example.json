@@ -6,10 +6,15 @@
       "--model",
       "claude-sonnet-5",
       "--setting-sources",
-      ""
+      "",
+      "--strict-mcp-config",
+      "--tools",
+      "",
+      "--append-system-prompt",
+      "You are answering a question in a chat conversation. You have no tools, and no access to any filesystem, repository, or codebase. Answer using only the information contained in the question itself. Never claim to inspect files and never emit tool-call syntax."
     ],
     "stdin": true,
-    "notes": "Prompts arrive on stdin rather than as an argument. Judge prompts carry the rubric plus every response for a case and can run past 30k characters, which exceeds the Windows command-line limit; stdin has no such cap. --setting-sources '' isolates the call from the operator's own plugins, hooks, memory, and output styles. Without it, a user-level always-on flag (~/.claude/.tldr-always) would inject the tldr ruleset into the BASELINE condition and the eval would measure the skill against itself. --model is pinned deliberately: isolation also drops the operator's saved model setting, so without a pin the eval silently runs whatever the CLI happens to default to, varying between operators and over time, and per-token cost varies with it. Record the pinned model with any published numbers."
+    "notes": "Prompts arrive on stdin rather than as an argument. Judge prompts carry the rubric plus every response for a case and can run past 30k characters, which exceeds the Windows command-line limit; stdin has no such cap. --setting-sources '' isolates the call from the operator's own plugins, hooks, memory, and output styles. Without it, a user-level always-on flag (~/.claude/.tldr-always) would inject the tldr ruleset into the BASELINE condition and the eval would measure the skill against itself. --model is pinned deliberately: isolation also drops the operator's saved model setting, so without a pin the eval silently runs whatever the CLI happens to default to, varying between operators and over time, and per-token cost varies with it. Record the pinned model with any published numbers. MCP is disabled with --strict-mcp-config and no --mcp-config: any MCP server in the operator config both leaks tools into the run and prints connection chatter onto STDOUT, which lands inside the captured response and inflates every token count. --tools \"\" removes tool access. The rubric scores the shape of a written answer, not agentic behaviour; with tools on, the CLI reads whatever directory it was launched in and answers about that repository instead of the prompt. --append-system-prompt carries a neutral framing, and is the least obvious but most important flag here. `claude --print` is an agent harness, not a completion endpoint: left alone it answers as though it were mid-session in a repository, offering to inspect files, emitting raw tool-call markup when no tools exist, and occasionally returning nothing at all. Observed on both sonnet and haiku. The framing is appended identically to every condition, so it is part of the instrument rather than part of the treatment - the only thing that differs between baseline and candidate is still the injected skill."
   },
   "claude-opus": {
     "command": [
@@ -18,10 +23,15 @@
       "--model",
       "claude-opus-5",
       "--setting-sources",
-      ""
+      "",
+      "--strict-mcp-config",
+      "--tools",
+      "",
+      "--append-system-prompt",
+      "You are answering a question in a chat conversation. You have no tools, and no access to any filesystem, repository, or codebase. Answer using only the information contained in the question itself. Never claim to inspect files and never emit tool-call syntax."
     ],
     "stdin": true,
-    "notes": "Same runner against the stronger model. Roughly five times the cost of the sonnet runner for the same case set. Worth it for a headline published number; the sonnet runner is the sensible default for iterating on the skill, and is closer to what most users actually run."
+    "notes": "Same runner against the stronger model. Roughly five times the cost of the sonnet runner for the same case set. Worth it for a headline published number; the sonnet runner is the sensible default for iterating on the skill, and is closer to what most users actually run. MCP is disabled with --strict-mcp-config and no --mcp-config: any MCP server in the operator config both leaks tools into the run and prints connection chatter onto STDOUT, which lands inside the captured response and inflates every token count. --tools \"\" removes tool access. The rubric scores the shape of a written answer, not agentic behaviour; with tools on, the CLI reads whatever directory it was launched in and answers about that repository instead of the prompt. --append-system-prompt carries a neutral framing, and is the least obvious but most important flag here. `claude --print` is an agent harness, not a completion endpoint: left alone it answers as though it were mid-session in a repository, offering to inspect files, emitting raw tool-call markup when no tools exist, and occasionally returning nothing at all. Observed on both sonnet and haiku. The framing is appended identically to every condition, so it is part of the instrument rather than part of the treatment - the only thing that differs between baseline and candidate is still the injected skill."
   },
   "claude-haiku": {
     "command": [
@@ -30,10 +40,15 @@
       "--model",
       "claude-haiku-4-5-20251001",
       "--setting-sources",
-      ""
+      "",
+      "--strict-mcp-config",
+      "--tools",
+      "",
+      "--append-system-prompt",
+      "You are answering a question in a chat conversation. You have no tools, and no access to any filesystem, repository, or codebase. Answer using only the information contained in the question itself. Never claim to inspect files and never emit tool-call syntax."
     ],
     "stdin": true,
-    "notes": "Cheap runner for smoke-testing the harness end to end before committing to a full run. Do not publish numbers from this one as a headline result: a style skill behaves differently on a small model, and the comparison is only meaningful against the model you actually claim it for."
+    "notes": "Cheap runner for smoke-testing the harness end to end before committing to a full run. Do not publish numbers from this one as a headline result: a style skill behaves differently on a small model, and the comparison is only meaningful against the model you actually claim it for. MCP is disabled with --strict-mcp-config and no --mcp-config: any MCP server in the operator config both leaks tools into the run and prints connection chatter onto STDOUT, which lands inside the captured response and inflates every token count. --tools \"\" removes tool access. The rubric scores the shape of a written answer, not agentic behaviour; with tools on, the CLI reads whatever directory it was launched in and answers about that repository instead of the prompt. --append-system-prompt carries a neutral framing, and is the least obvious but most important flag here. `claude --print` is an agent harness, not a completion endpoint: left alone it answers as though it were mid-session in a repository, offering to inspect files, emitting raw tool-call markup when no tools exist, and occasionally returning nothing at all. Observed on both sonnet and haiku. The framing is appended identically to every condition, so it is part of the instrument rather than part of the treatment - the only thing that differs between baseline and candidate is still the injected skill."
   },
   "codex": {
     "command": [

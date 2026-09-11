@@ -39,6 +39,8 @@ from run_evals import (  # noqa: E402
     load_cases,
     load_runners,
     judge_region,
+    neutral_cwd,
+    resolve_executable,
 )
 
 LABELS = ("A", "B", "C")
@@ -111,14 +113,19 @@ def parse_verdict(text: str, expected: set[str]) -> list[dict[str, Any]]:
 
 
 def invoke(spec: dict[str, Any], prompt: str, timeout: int) -> str:
-    command = [part.replace("{prompt}", prompt) for part in spec["command"]]
+    command = resolve_executable(
+        [part.replace("{prompt}", prompt) for part in spec["command"]]
+    )
     result = subprocess.run(
         command,
         input=prompt if spec.get("stdin", False) else None,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
         env={**os.environ, **spec.get("env", {})},
+        cwd=neutral_cwd(),
     )
     if result.returncode != 0:
         raise EvalError(f"grader exited {result.returncode}: {result.stderr.strip()[:300]}")

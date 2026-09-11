@@ -25,7 +25,9 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -308,8 +310,43 @@ def build_prompt(case: Case, instruction: str) -> str:
     return f"{instruction}\n\n---\n\n{case.prompt}"
 
 
+_NEUTRAL_CWD: str | None = None
+
+
+def neutral_cwd() -> str:
+    """An empty directory to run the provider CLI in.
+
+    These CLIs are agents: launched inside a repository they will read it and
+    answer about that code rather than about the prompt. Every condition would be
+    contaminated by whatever directory the harness happened to be started from,
+    and results would not reproduce across machines.
+    """
+    global _NEUTRAL_CWD
+    if _NEUTRAL_CWD is None:
+        _NEUTRAL_CWD = tempfile.mkdtemp(prefix="tldr-eval-")
+    return _NEUTRAL_CWD
+
+
+def resolve_executable(command: list[str]) -> list[str]:
+    """Resolve argv[0] against PATH before handing it to subprocess.
+
+    On Windows the CLIs this harness drives are installed as .CMD shims, which
+    subprocess will not find from a bare name: it does not apply PATHEXT the way a
+    shell does. shutil.which does, and resolving here keeps shell=False.
+    """
+    resolved = shutil.which(command[0])
+    if resolved is None:
+        raise EvalError(
+            f"runner executable not found on PATH: {command[0]!r}. "
+            "Install it, or correct the command in evals/runners.example.json."
+        )
+    return [resolved, *command[1:]]
+
+
 def invoke_runner(spec: dict[str, Any], prompt: str, timeout: int) -> dict[str, Any]:
-    command = [part.replace("{prompt}", prompt) for part in spec["command"]]
+    command = resolve_executable(
+        [part.replace("{prompt}", prompt) for part in spec["command"]]
+    )
     env = {**os.environ, **spec.get("env", {})}
 
     result = subprocess.run(
@@ -317,8 +354,14 @@ def invoke_runner(spec: dict[str, Any], prompt: str, timeout: int) -> dict[str, 
         input=prompt if spec.get("stdin", False) else None,
         capture_output=True,
         text=True,
+        # Explicit: text=True decodes with the locale codepage on Windows, which
+        # turns every em-dash and arrow in a response into mojibake before it is
+        # ever scored.
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
         env=env,
+        cwd=neutral_cwd(),
     )
 
     if result.returncode != 0:
@@ -326,7 +369,14 @@ def invoke_runner(spec: dict[str, Any], prompt: str, timeout: int) -> dict[str, 
             f"runner exited {result.returncode}: {result.stderr.strip()[:500]}"
         )
 
-    return {"response": result.stdout.strip()}
+    response = result.stdout.strip()
+
+    # An empty body is a provider hiccup, not an answer. Scoring it would credit the
+    # condition with a zero-token response and drag its token mean down for free.
+    if not response:
+        raise EvalError("runner returned an empty response")
+
+    return {"response": response}
 
 
 def cmd_run(args: argparse.Namespace) -> int:
