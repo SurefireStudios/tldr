@@ -304,8 +304,14 @@ def cmd_plan(args: argparse.Namespace) -> int:
     return 0
 
 
-def build_prompt(case: Case, instruction: str) -> str:
-    if not instruction:
+def build_prompt(case: Case, instruction: str, spec: dict[str, Any]) -> str:
+    """The user turn.
+
+    When the runner can take a system instruction, the user turn is the bare task,
+    exactly as a real user would type it. Only a runner with no system flag falls
+    back to prefixing, and that fallback is documented as not comparable.
+    """
+    if not instruction or spec.get("system_flag"):
         return case.prompt
     return f"{instruction}\n\n---\n\n{case.prompt}"
 
@@ -327,26 +333,65 @@ def neutral_cwd() -> str:
     return _NEUTRAL_CWD
 
 
-def resolve_executable(command: list[str]) -> list[str]:
-    """Resolve argv[0] against PATH before handing it to subprocess.
+SHIM_TARGET_RE = re.compile(r'"%dp0%\\?([^"]+\.(?:exe|cmd))"', re.IGNORECASE)
 
-    On Windows the CLIs this harness drives are installed as .CMD shims, which
-    subprocess will not find from a bare name: it does not apply PATHEXT the way a
-    shell does. shutil.which does, and resolving here keeps shell=False.
+
+def unwrap_windows_shim(path: str) -> str:
+    """Follow an npm .cmd shim to the real executable it launches.
+
+    Two reasons, and the second one is the blocking one:
+
+    1. subprocess cannot launch a bare name on Windows because it does not apply
+       PATHEXT the way a shell does.
+    2. A .cmd shim runs under cmd.exe, whose command line is capped at 8191
+       characters. This harness passes the whole skill body as a system prompt,
+       which is comfortably past that, so every candidate call dies with "The
+       command line is too long." The real .exe is not launched through cmd.exe
+       and gets the full 32767-character Windows limit.
+
+    Returns the original path unchanged when it is not a shim, or when the target
+    cannot be found - the caller then fails with a real error rather than a guess.
     """
+    if not path.lower().endswith((".cmd", ".bat")):
+        return path
+
+    try:
+        shim = Path(path).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return path
+
+    match = SHIM_TARGET_RE.search(shim)
+    if not match:
+        return path
+
+    target = Path(path).parent / match.group(1).replace("\\", os.sep)
+    return str(target) if target.exists() else path
+
+
+def resolve_executable(command: list[str]) -> list[str]:
+    """Resolve argv[0] to something subprocess can actually launch."""
     resolved = shutil.which(command[0])
     if resolved is None:
         raise EvalError(
             f"runner executable not found on PATH: {command[0]!r}. "
             "Install it, or correct the command in evals/runners.example.json."
         )
-    return [resolved, *command[1:]]
+    return [unwrap_windows_shim(resolved), *command[1:]]
 
 
-def invoke_runner(spec: dict[str, Any], prompt: str, timeout: int) -> dict[str, Any]:
-    command = resolve_executable(
-        [part.replace("{prompt}", prompt) for part in spec["command"]]
-    )
+def invoke_runner(
+    spec: dict[str, Any], prompt: str, timeout: int, instruction: str = ""
+) -> dict[str, Any]:
+    command = [part.replace("{prompt}", prompt) for part in spec["command"]]
+
+    # Deliver the condition's skill the way every supported harness delivers it in
+    # production: as a system instruction, above the conversation rather than inside
+    # it. See system_flag in runners.example.json for why this is load-bearing.
+    system_flag = spec.get("system_flag")
+    if instruction and system_flag:
+        command += [system_flag, instruction]
+
+    command = resolve_executable(command)
     env = {**os.environ, **spec.get("env", {})}
 
     result = subprocess.run(
@@ -422,13 +467,13 @@ def cmd_run(args: argparse.Namespace) -> int:
     failures = 0
 
     for index, (case, trial) in enumerate(planned, start=1):
-        prompt = build_prompt(case, instruction)
+        prompt = build_prompt(case, instruction, spec)
         label = f"[{index}/{len(planned)}] {case.id} trial {trial}"
 
         last_error: str | None = None
         for attempt in range(1, args.retries + 2):
             try:
-                result = invoke_runner(spec, prompt, args.timeout)
+                result = invoke_runner(spec, prompt, args.timeout, instruction)
                 append_row(
                     output,
                     {
