@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="tldr">
+  <title>tldr</title>
+  <desc>A bold summary line above a fold, with the full detail kept below it.</desc>
+
+  <rect width="160" height="160" rx="34" fill="#0F172A"/>
+
+  <!-- The TL;DR: three bold lines, above the fold -->
+  <g fill="#F97316">
+    <rect x="30" y="34" width="100" height="10" rx="5"/>
+    <rect x="30" y="52" width="84"  height="10" rx="5"/>
+    <rect x="30" y="70" width="62"  height="10" rx="5"/>
+  </g>
+
+  <!-- The fold: nothing is deleted, it is moved below this line -->
+  <g stroke="#334155" stroke-width="3" stroke-linecap="round">
+    <line x1="30" y1="94" x2="62" y2="94"/>
+    <line x1="98" y1="94" x2="130" y2="94"/>
+  </g>
+  <path d="M72 89.5 L80 97.5 L88 89.5" fill="none" stroke="#64748B"
+        stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- The detail: still there, just demoted -->
+  <g fill="#475569">
+    <rect x="30" y="110" width="100" height="6" rx="3"/>
+    <rect x="30" y="122" width="100" height="6" rx="3"/>
+    <rect x="30" y="134" width="74"  height="6" rx="3"/>
+  </g>
+</svg>

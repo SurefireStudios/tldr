@@ -1,0 +1,38 @@
+name: Harness support
+description: Request or report support for an agent not yet listed
+title: "[harness] "
+labels: ["harness"]
+body:
+  - type: input
+    id: harness
+    attributes:
+      label: Which agent?
+      placeholder: "e.g. Continue, Cody, Goose"
+    validations:
+      required: true
+
+  - type: textarea
+    id: mechanism
+    attributes:
+      label: How does it load custom instructions, rules, or skills?
+      description: A docs link is ideal. A file path that works is better than a guess.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - I want this supported
+        - I got it working and will open a PR
+        - I got it working, someone else can write it up
+        - I tried and it does not work
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Does it render HTML, or is it a plain terminal? That decides which fold shape the skill should use.

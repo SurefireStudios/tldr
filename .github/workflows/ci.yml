@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # The three always-on hook implementations must agree byte for byte. Running
+      # the suite on all three runners is the only way that claim stays true: the
+      # PowerShell path is only exercised on Windows, and it is the one that has
+      # historically mangled the skill's non-ASCII punctuation.
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+  validate:
+    name: validate skill, mirrors, and evals
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Mirrors are in sync with the canonical skill
+        run: python scripts/check_mirrors.py
+
+      - name: Eval cases, rubric, and runners are well formed
+        run: python scripts/run_evals.py validate
+
+      - name: Every manifest is valid JSON
+        run: |
+          for f in .claude-plugin/plugin.json \
+                   .claude-plugin/marketplace.json \
+                   .codex-plugin/plugin.json \
+                   .agents/plugins/marketplace.json \
+                   plugin.json \
+                   opencode.json \
+                   package.json \
+                   gemini-extension.json \
+                   qwen-extension.json \
+                   kimi.plugin.json \
+                   hooks/hooks.json \
+                   evals/runners.example.json; do
+            python -c "import json,sys; json.load(open(sys.argv[1]))" "$f" && echo "ok  $f"
+          done
+
+  syntax:
+    name: adapter syntax
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: OpenCode plugin parses
+        run: node --check .opencode/plugins/tldr.mjs || node -e "import('./.opencode/plugins/tldr.mjs').then(()=>console.log('ok'))"
+
+      - name: Always-on hook parses
+        run: node --check hooks/always-on.mjs
+
+      - name: Shell hook parses
+        run: sh -n hooks/always-on.sh
+
+      - name: PowerShell hook parses
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $null = [System.Management.Automation.Language.Parser]::ParseFile(
+            "hooks/always-on.ps1", [ref]$null, [ref]$null)
+          Write-Output "ok"

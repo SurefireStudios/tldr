@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "tldr: a compression contract for AI coding agents"
+message: "If you use or reference this project, please cite it."
+type: software
+authors:
+  - name: "Surefire Studios"
+    website: "https://github.com/SurefireStudios"
+repository-code: "https://github.com/SurefireStudios/tldr"
+url: "https://github.com/SurefireStudios/tldr"
+abstract: >-
+  A skill for AI coding agents that leads every response with a three-line
+  TL;DR and keeps the full detail directly underneath, rather than deleting it.
+  Includes a parseable block format for agent-to-agent reports, and an
+  evaluation harness that measures output-token reduction alongside a fidelity
+  score, so compression cannot be claimed as a win when it loses information.
+keywords:
+  - large language models
+  - ai agents
+  - summarization
+  - context engineering
+  - token optimization
+  - human computer interaction
+license: MIT
+version: 0.1.0
+date-released: "2026-09-11"

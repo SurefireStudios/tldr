@@ -1,0 +1,15 @@
+name = "tldr"
+description = "Lead with a three-line TL;DR and fold the full detail underneath. Demote, don't delete."
+
+[prompt]
+context_file = "../../../GEMINI.md"
+
+[commands.tldr]
+description = "Turn on TL;DR output, set the depth dial, or compress one target"
+prompt = """
+Apply the tldr contract to every response for the rest of this session: lead with
+a three-line TL;DR (what is true, what to do, what it costs), then the complete
+detail directly underneath. Never fold destructive actions, security findings,
+data loss, cost, or verbatim error text. When returning output to another agent,
+use the parseable tldr block and write long output to a file instead.
+"""

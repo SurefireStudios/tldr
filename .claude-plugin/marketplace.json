@@ -1,0 +1,18 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "tldr",
+  "description": "Too long; didn't read, for AI coding agents. Three-line summary first, full detail folded underneath.",
+  "owner": {
+    "name": "Surefire Studios",
+    "url": "https://github.com/SurefireStudios"
+  },
+  "plugins": [
+    {
+      "name": "tldr",
+      "description": "Lead with a three-line TL;DR, fold the detail, compress agent-to-agent reports. Demote, don't delete.",
+      "source": "./",
+      "category": "productivity",
+      "keywords": ["tldr", "summarization", "output-style", "token-optimization"]
+    }
+  ]
+}

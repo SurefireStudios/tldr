@@ -1,0 +1,34 @@
+{
+  "claude": {
+    "command": [
+      "claude",
+      "-p",
+      "{prompt}",
+      "--model",
+      "claude-opus-4-8",
+      "--setting-sources",
+      ""
+    ],
+    "notes": "--setting-sources '' isolates the call from the operator's own plugins, hooks, memory, and output styles. Without it, a user-level always-on flag (~/.claude/.tldr-always) would inject the tldr ruleset into the BASELINE condition and the eval would measure the skill against itself. --model is pinned deliberately: without a pin the eval silently runs whatever the operator or the CLI release defaults to, so the model varies between operators and over time, and per-token cost varies with it."
+  },
+  "codex": {
+    "command": [
+      "codex",
+      "exec",
+      "{prompt}",
+      "--ignore-user-config",
+      "--ephemeral"
+    ],
+    "notes": "--ignore-user-config --ephemeral is the Codex equivalent of the isolation above. Keep it."
+  },
+  "gemini": {
+    "command": [
+      "gemini",
+      "-p",
+      "{prompt}",
+      "--model",
+      "gemini-3-pro"
+    ],
+    "notes": "Gemini CLI loads GEMINI.md from the working directory. Run this harness from a directory that does not contain one, or the context file leaks into every condition."
+  }
+}

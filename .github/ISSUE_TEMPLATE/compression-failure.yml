@@ -1,0 +1,68 @@
+name: Compression failure
+description: tldr hid, dropped, or paraphrased something you needed
+title: "[compression] "
+labels: ["compression-failure", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most valuable issue you can open here.
+
+        `tldr` promises that **a reader who reads only the TL;DR does not end up
+        with a false belief**. If it broke that promise, it is a bug, not a
+        preference — and the fix is usually a new eval case plus a sharpened rule.
+
+  - type: textarea
+    id: prompt
+    attributes:
+      label: The exact prompt
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: response
+    attributes:
+      label: The response you got
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: missing
+    attributes:
+      label: What was missing, and what would you have done differently?
+      description: The second half matters most — it is what makes this a fidelity failure rather than a style preference.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Which never-compress category does this fall under?
+      options:
+        - Destructive action
+        - Security finding
+        - Data loss or irreversibility
+        - Money, quota, or rate limits
+        - Verbatim error text
+        - A diff that was summarized instead of shown
+        - Legal or medical boundary
+        - Something the never-compress list does not cover yet
+    validations:
+      required: true
+
+  - type: input
+    id: harness
+    attributes:
+      label: Harness and model
+      placeholder: "Claude Code 2.x, claude-opus-4-8"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: eval
+    attributes:
+      label: Optional
+      options:
+        - label: I am willing to add this as a case in evals/cases.jsonl

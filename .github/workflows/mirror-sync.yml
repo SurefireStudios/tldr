@@ -1,0 +1,46 @@
+name: Sync skill mirrors
+
+# `skills/tldr/SKILL.md` is the single source of truth. Harnesses that cannot read
+# from that path get a copy, and a copy that drifts is worse than no copy: two
+# harnesses would follow two different rulesets while both claiming to run tldr.
+#
+# CI fails a pull request whose mirrors have drifted. This workflow fixes the
+# common case automatically after a merge, so contributors editing the canonical
+# skill do not have to remember the copy step.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/tldr/SKILL.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy canonical skill to every mirror
+        run: |
+          mkdir -p .cursor/skills/tldr
+          cp skills/tldr/SKILL.md .cursor/skills/tldr/SKILL.md
+
+      - name: Verify
+        run: python3 scripts/check_mirrors.py
+
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet; then
+            echo "mirrors already in sync"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .cursor/skills/tldr/SKILL.md
+          git commit -m "chore: sync skill mirrors with canonical SKILL.md"
+          git push

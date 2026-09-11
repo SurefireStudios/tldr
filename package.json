@@ -1,0 +1,12 @@
+{
+  "name": "tldr-skill",
+  "version": "0.1.0",
+  "description": "Too long; didn't read, for AI coding agents. Lead with a three-line TL;DR, fold the full detail underneath, compress agent-to-agent reports to a parseable block.",
+  "license": "MIT",
+  "homepage": "https://github.com/SurefireStudios/tldr",
+  "repository": { "type": "git", "url": "https://github.com/SurefireStudios/tldr.git" },
+  "private": true,
+  "keywords": ["pi-package", "tldr", "summarization", "output-style", "token-optimization"],
+  "omp": { "extensions": ["./extensions/tldr.ts"] },
+  "pi": { "extensions": ["./extensions/tldr.ts"], "skills": ["./skills"] }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "tldr",
+  "version": "0.1.0",
+  "description": "Too long; didn't read, for Qwen Code. Three-line TL;DR first, full detail folded underneath.",
+  "skills": "skills"
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+# Eval run artifacts: results are published deliberately via evals/RESULTS.md,
+# not by committing raw provider responses.
+evals/results/*.jsonl
+evals/results/*.json
+!evals/results/.gitkeep
+
+__pycache__/
+*.pyc
+.venv/
+.env

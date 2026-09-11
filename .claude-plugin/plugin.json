@@ -1,0 +1,13 @@
+{
+  "name": "tldr",
+  "version": "0.1.0",
+  "description": "Too long; didn't read, for Claude Code. Lead every response with a three-line TL;DR and fold the full detail underneath. Demote, don't delete.",
+  "author": {
+    "name": "Surefire Studios",
+    "url": "https://github.com/SurefireStudios"
+  },
+  "homepage": "https://github.com/SurefireStudios/tldr",
+  "repository": "https://github.com/SurefireStudios/tldr",
+  "license": "MIT",
+  "keywords": ["tldr", "summarization", "output-style", "context-engineering", "token-optimization", "productivity"]
+}
