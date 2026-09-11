@@ -163,6 +163,7 @@ MIT.
 ---
 
 <p align="center">
-  <strong>Dale una estrella ⭐ si te ahorró un scroll.</strong><br/>
-  <sub>too long; didn't read</sub>
+  <strong>TL;DR: dale una estrella. ⭐</strong><br/>
+  <sub>Acabas de leerte entero un README sobre no leer cosas.<br/>
+  No seas perezoso justo en el último clic.</sub>
 </p>

@@ -163,6 +163,7 @@ MIT。
 ---
 
 <p align="center">
-  <strong>如果它帮你少滚动了一次，点个 Star ⭐</strong><br/>
-  <sub>too long; didn't read</sub>
+  <strong>TL;DR：点个 Star。⭐</strong><br/>
+  <sub>你刚刚把一篇讲「别读长文」的 README 从头读到了尾。<br/>
+  最后这一下，就别偷懒了。</sub>
 </p>

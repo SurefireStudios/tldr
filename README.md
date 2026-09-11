@@ -288,6 +288,7 @@ MIT. Do whatever you want with it.
 ---
 
 <p align="center">
-  <strong>Star ⭐ if it saved you one scroll.</strong><br/>
-  <sub>too long; didn't read · also accepted: too lazy, didn't read</sub>
+  <strong>TL;DR: star it. ⭐</strong><br/>
+  <sub>You just read an entire README about not reading things.<br/>
+  Don't be too lazy for the last click.</sub>
 </p>

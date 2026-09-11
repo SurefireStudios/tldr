@@ -163,6 +163,7 @@ MIT。
 ---
 
 <p align="center">
-  <strong>スクロール 1 回分でも節約できたら ⭐ を。</strong><br/>
-  <sub>too long; didn't read</sub>
+  <strong>TL;DR: スターを。⭐</strong><br/>
+  <sub>「長いものは読まない」ための README を、最後まで読んでしまいましたね。<br/>
+  最後のワンクリックまで面倒がらずに。</sub>
 </p>
