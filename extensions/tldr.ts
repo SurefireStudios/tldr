@@ -98,11 +98,11 @@ function getSavedState(ctx: ExtensionContext): Partial<TldrModeState> | undefine
 }
 
 /**
- * Whether the rules are still live in the context the model actually receives.
+ * Are the rules still present in the context the model will actually see?
  *
- * Only the newest marker counts: a later "disabled" notice cancels an earlier
- * ruleset, and compaction drops summarized entries so the ruleset has to be
- * injected again.
+ * Scan forward and let the last marker win: a disable notice posted after an
+ * injection cancels it. Compaction can also drop the injected entry outright, in
+ * which case this reports false and the caller injects again.
  */
 function rulesAreInContext(ctx: ExtensionContext): boolean {
   let active = false;
@@ -136,8 +136,11 @@ export default function tldrExtension(pi: ExtensionAPI) {
   };
 
   /**
-   * Keep the conversation in sync with the current mode, the way the Claude Code
-   * SessionStart hook does: inject the ruleset once, never per request.
+   * Reconcile the transcript with the current mode.
+   *
+   * The ruleset goes in once and stays in. Re-sending it every request would pay
+   * for the same few thousand tokens on every turn, which is a strange thing for a
+   * skill about token cost to do.
    */
   const syncContext = (ctx: ExtensionContext): void => {
     const injected = rulesAreInContext(ctx);
@@ -249,8 +252,8 @@ export default function tldrExtension(pi: ExtensionAPI) {
   pi.on("input", async (event, ctx) => {
     const input = event.text.trim().toLowerCase();
 
-    // Keep the built-in skill command working as an alias without letting Pi
-    // expand a second copy of the same rules into the conversation.
+    // Pi would otherwise expand the skill itself here, leaving two copies of the
+    // ruleset in the transcript. Handle the alias and let syncContext decide.
     if (input === "/skill:tldr") {
       setState(true, depth, ctx);
       return { action: "handled" };

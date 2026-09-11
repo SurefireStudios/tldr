@@ -40,7 +40,7 @@ try {
     $header = "TLDR MODE ACTIVE (always-on). The ruleset below applies to every response. " +
               "Depth dial is set to $depth. " +
               '"stop tldr" or "normal mode" turns it off for this session; ' +
-              "delete $flagPath to turn always-on off for good."
+              "remove $flagPath to stop it loading at startup."
 
     Write-Output "$header`n`n$body"
 } catch {

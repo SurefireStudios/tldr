@@ -44,7 +44,7 @@ Replace everything above this line with the filled-in version.
 | Cases | 16 (`cases.jsonl`) |
 | Trials | 3 |
 | Rows | 48 per condition, 96 total |
-| Judge | same model and runner, blind, one call per `(case, trial)` group |
+| Judge | same model and runner; blind, with every condition for a case graded together |
 | Reported cost | `$X.XX` generation + `$X.XX` judging |
 
 ### Quality

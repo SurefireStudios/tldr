@@ -1,19 +1,22 @@
 // tldr — OpenCode plugin.
 //
-// Mirrors the Claude Code / Codex behaviour for OpenCode. The skill in
-// `skills/tldr/SKILL.md` is the single source of truth for the ruleset.
+// OpenCode has no SessionStart hook, so this plugin reproduces the two behaviours
+// that hooks/always-on.mjs gives Claude Code and Codex. Either way the ruleset is
+// read from skills/tldr/SKILL.md, which stays the only copy that matters.
 //
-//   - On demand  — registers the skills directory and a `/tldr` command so the
-//                  ruleset applies for the rest of the session.
-//   - Always-on  — when the opt-in flag file exists, the full ruleset is appended
-//                  to the system prompt every turn (the OpenCode equivalent of the
-//                  SessionStart hook in hooks/always-on.mjs).
+//   On demand   Registers the skills directory plus a `/tldr` command, so a user
+//               can switch the contract on for the rest of a session.
 //
-// Opt in to always-on:   touch ~/.config/opencode/.tldr-always
-// Set a default depth:   echo 1 > ~/.config/opencode/.tldr-always
-// Opt back out:          rm ~/.config/opencode/.tldr-always
+//   Always-on   While the opt-in flag file exists, the ruleset is appended to the
+//               system prompt on every turn. OpenCode rebuilds that prompt per
+//               request, which is why this hangs off a transform rather than
+//               firing once at startup.
 //
-// Install — add to opencode.json:
+// Turn always-on on:     touch ~/.config/opencode/.tldr-always
+// Pick a start depth:    echo 1 > ~/.config/opencode/.tldr-always
+// Turn it back off:      rm ~/.config/opencode/.tldr-always
+//
+// Wire it up in opencode.json:
 //   { "plugin": ["./.opencode/plugins/tldr.mjs"] }
 
 import fs from 'fs';
@@ -28,7 +31,8 @@ const commandPath = path.join(__dirname, '..', 'command', 'tldr.md');
 
 const VALID_DEPTHS = new Set(['0', '1', '3', '5']);
 
-// JSON is valid YAML frontmatter; share native command metadata without a YAML dependency.
+// The command file's frontmatter is written as JSON, which is also valid YAML.
+// That lets both loaders share one file without pulling in a YAML parser.
 async function commandDefinition() {
   const raw = await fs.promises.readFile(commandPath, 'utf8');
   const match = raw.match(/^---[^\S\r\n]*\r?\n([\s\S]*?)\r?\n---[^\S\r\n]*(?:\r?\n|$)([\s\S]*)$/);
@@ -44,9 +48,10 @@ const flagPath = path.join(
   '.tldr-always',
 );
 
-// Read SKILL.md and strip a leading YAML frontmatter block (--- ... ---).
-// The regex and trailing-newline trim match hooks/always-on.mjs so always-on
-// injections behave identically across harnesses (see tests/test_always_on_hooks.py).
+// Read the skill and drop its frontmatter. The regex and the trailing-newline trim
+// are deliberately identical to hooks/always-on.mjs: an OpenCode user and a Claude
+// Code user must receive the same bytes, which tests/test_always_on_hooks.py
+// asserts directly.
 function rulesetBody() {
   return fs
     .readFileSync(skillPath, 'utf8')
@@ -72,14 +77,15 @@ export default async () => {
       config.skills.paths = config.skills.paths || [];
       if (!config.skills.paths.includes(skillsDir)) config.skills.paths.push(skillsDir);
 
-      // Global installs need a command entry; preserve native or user-defined commands.
+      // A global install has no project-local command to discover, so register one -
+        // but never clobber a command the user or OpenCode already defined.
       try {
         config.command = config.command || {};
         if (!config.command['tldr']) {
           config.command['tldr'] = await commandDefinition();
         }
       } catch (e) {
-        // Missing or malformed command files must not break skill discovery.
+        // A bad command file costs the user the slash command, not the whole skill.
       }
     },
 
@@ -97,8 +103,8 @@ export default async () => {
       const header =
         'TLDR MODE ACTIVE (always-on). The ruleset below applies to every response. ' +
         'Depth dial is set to ' + configuredDepth() + '. ' +
-        '"stop tldr" or "normal mode" turns it off for this session; delete ' +
-        flagPath + ' to turn always-on off for good.';
+        '"stop tldr" or "normal mode" turns it off for this session; remove ' +
+        flagPath + ' to stop it loading at startup.';
 
       const injected = header + '\n\n' + body;
 

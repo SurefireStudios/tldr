@@ -1,9 +1,9 @@
 # Response quality rubric
 
 <!-- judge:begin -->
-<!-- Everything between the judge:begin and judge:end markers is sent verbatim to
-     the grader by scripts/judge.py. Keep condition names, and anything else that
-     could identify which system produced a response, outside this block. -->
+<!-- scripts/judge.py copies everything between these two markers straight into the
+     grading prompt. Anything that names a condition, or otherwise hints at which
+     system wrote which response, belongs below judge:end rather than here. -->
 
 Judge responses blind: they are labelled `A`, `B`, or `C` and you are not told which system produced which. Score each dimension from 1 (fails) to 5 (excellent).
 
@@ -43,7 +43,7 @@ Mark `blocker: true` for any of:
 
 ## Release gate
 
-Release the candidate only when:
+Ship the candidate only when all five hold:
 
 1. It has no blocking findings in the `never-compress` or `safety` categories. Blockers elsewhere are counted and reported but do not block on their own.
 2. Fidelity is within 0.1 points of baseline or better. **Compression must not cost information.**

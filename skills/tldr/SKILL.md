@@ -39,9 +39,9 @@ Turn them off when the reader says "stop tldr", "tldr off", or "normal mode". Co
 
 ```markdown
 **TL;DR**
-- Auth fails because `verifyToken` uses the pre-9.0 `jsonwebtoken` API.
-- Fix: upgrade the package, then rewrite `src/auth.ts:42-58`.
-- ~15 minutes if the auth tests already cover this path.
+- `listOrders` queries the customer table once per row: 241 round trips to render one page.
+- Fix: pass `include: { customer: true }` at `src/orders/repository.ts:88`, then delete the loop under it.
+- ~10 minutes. The orders benchmark already covers this path.
 
 <details>
 <summary>Full detail</summary>
@@ -57,9 +57,9 @@ A raw `<details>` tag in a terminal is worse than no fold at all. Use a divider:
 
 ```markdown
 TL;DR
-1. Auth fails because verifyToken uses the pre-9.0 jsonwebtoken API.
-2. Fix: upgrade the package, then rewrite src/auth.ts:42-58.
-3. ~15 minutes if the auth tests already cover this path.
+1. listOrders queries the customer table once per row: 241 round trips per page.
+2. Fix: pass include: { customer: true } at src/orders/repository.ts:88.
+3. ~10 minutes. The orders benchmark already covers this path.
 
 --- detail ---
 
@@ -125,22 +125,22 @@ When one of these is in play, say so in the TL;DR itself. "This drops the `users
 
 Before any prose, any preamble, any restatement of the question. The first token of the response is the TL;DR block.
 
-Bad: "Great question! Let me look at your auth flow. **TL;DR** ..."
+Bad: "Thanks for flagging this! Let me trace the orders endpoint. **TL;DR** ..."
 Good: "**TL;DR** ..."
 
 ### 2. Every TL;DR line stands alone
 
 A line that only makes sense after reading the detail is not a TL;DR line. No forward references: no "see below", no "as explained in the detail", no "there are several considerations".
 
-Bad: "There are a few issues with your auth setup — details below."
-Good: "`verifyToken` calls a `jsonwebtoken` API removed in 9.0."
+Bad: "There are a few performance problems in the orders path — details below."
+Good: "`listOrders` issues one customer query per row: 241 queries to render one page."
 
 ### 3. Name things exactly
 
 Paths, line numbers, commands, error codes, function names. A TL;DR full of nouns like "the config" or "some dependencies" has compressed away the only part worth keeping.
 
-Bad: "Update the auth file and rerun the tests."
-Good: "Edit `src/auth.ts:42`, then run `npm test -- auth.spec.ts`."
+Bad: "Add eager loading to the repository and re-run the benchmark."
+Good: "Add `include: { customer: true }` at `src/orders/repository.ts:88`, then run `npm run bench -- orders`."
 
 ### 4. The detail stays complete
 
@@ -152,8 +152,8 @@ This is the rule most likely to decay over a long session. Check it.
 
 Do not paste a 400-line test run, dependency tree, or log dump into the response. Report the shape and the signal:
 
-Bad: *[400 lines of jest output]*
-Good: "3 of 212 tests fail, all in `auth.spec.ts`. First failure: `expected 200, received 401` at line 42. Full run in `/tmp/jest.log`."
+Bad: *[400 lines of vitest output]*
+Good: "7 of 340 tests fail, all in `checkout.spec.ts`. First failure: `AssertionError: expected 'EUR', received 'USD'` at line 118. Full run in `/tmp/vitest.log`."
 
 Keep the verbatim text of the failures. Drop the passes.
 
@@ -190,8 +190,8 @@ This is where the token savings actually live. A subagent that narrates its reas
 status: ok | partial | blocked | failed
 summary: <one line, <=200 chars, the result not the process>
 changed:
-  - src/auth.ts:42-58
-  - package.json
+  - src/orders/repository.ts:88-104
+  - test/orders.bench.ts
 findings:
   - <one line, most important first, max 5>
 next: <one concrete action, or "none">
@@ -206,7 +206,7 @@ Only `status` and `summary` are required. Drop any key with nothing to say — a
 
 1. **Return the block and stop.** No narration before it, no summary after it. The orchestrator asked for a result.
 2. **Write the long version to a file, reference it in `full`.** Do not pipe it through the context window. The orchestrator can read the file if it needs to.
-3. **`summary` is the result, not the process.** "Found 3 auth bugs, all in token refresh" — not "I searched the codebase and analyzed the auth flow."
+3. **`summary` is the result, not the process.** "Orders page drops from 241 queries to 2" — not "I profiled the endpoint and traced the query path."
 4. **Never compress what the caller needs verbatim**: exact error text, exact diffs, exact file paths, exact failing assertions. The same never-compress list applies with full force.
 5. **`status: blocked` requires `next`.** A blocked report with no stated unblock is a dead end for the orchestrator.
 6. **Preserve uncertainty.** If you are not sure, use `status: partial` and say so in `summary`. A confident wrong summary is far more expensive than a hedged one, because the orchestrator will not re-check it.

@@ -28,7 +28,7 @@ esac
 printf 'TLDR MODE ACTIVE (always-on). The ruleset below applies to every response. '
 printf 'Depth dial is set to %s. ' "$DEPTH"
 printf '"stop tldr" or "normal mode" turns it off for this session; '
-printf 'delete %s to turn always-on off for good.\n\n' "$FLAG_PATH"
+printf 'remove %s to stop it loading at startup.\n\n' "$FLAG_PATH"
 
 # Strip a leading YAML frontmatter block (--- ... --- at the very top of file).
 awk '

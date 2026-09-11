@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <strong title="English" aria-label="English">🇬🇧</strong> ·
+  <strong title="English">🇬🇧 English</strong> ·
   <a href=".github/readme/README.zh-CN.md" title="简体中文">🇨🇳</a> ·
   <a href=".github/readme/README.es.md" title="Español">🇪🇸</a> ·
   <a href=".github/readme/README.pt-BR.md" title="Português (Brasil)">🇧🇷</a> ·
@@ -69,9 +69,9 @@ Nothing is thrown away. You choose your depth.
 
 ```markdown
 **TL;DR**
-- Auth fails because `verifyToken` uses the pre-9.0 `jsonwebtoken` API.
-- Fix: upgrade the package, then rewrite `src/auth.ts:42-58`.
-- ~15 minutes if the auth tests already cover this path.
+- `listOrders` queries the customer table once per row: 241 round trips to render one page.
+- Fix: pass `include: { customer: true }` at `src/orders/repository.ts:88`, then delete the loop under it.
+- ~10 minutes. The orders benchmark already covers this path.
 
 <details>
 <summary>Full detail</summary>
@@ -90,20 +90,20 @@ In a terminal, where `<details>` does not render, it uses a plain divider instea
 
 ### Before
 
-> Great question! Let me take a look at this. Your auth flow has a few moving pieces here — there's the middleware layer, the token verification step, and the cookie handling on the way back out. Looking at `src/auth.ts`, the `verifyToken` function around lines 42-58 appears to be calling an older version of the `jsonwebtoken` API that was changed in the 9.0 release. One approach would be to update the package and rewrite that function to match the new signature. After you make that change, you'd want to run the auth test suite to confirm nothing else breaks. By the way, while I was in there I noticed a few of your other dependencies are also somewhat out of date, and your README still references the old setup steps. Hope this helps! Let me know if you'd like me to dig into any of this further.
+> Thanks for flagging this — there's a fair bit going on with the orders endpoint. The route handler calls `listOrders` over in the repository layer, which pulls the order rows and then, for each individual row, issues a separate query to resolve that order's customer record. On a page rendering 240 orders that works out to 241 round trips to the database, which is almost certainly where the latency is coming from. Prisma does support eager loading through the `include` option, so one possible approach would be to pass the customer relation into the initial query and then remove the per-row lookup beneath it. You might also want to confirm there's an index on `orders.customer_id`, though that's more of a nice-to-have than the actual fix here. While I was in there I noticed the invoices repository looks like it has the same shape of problem, and separately your Prisma client is a couple of minor versions behind. Hope that helps — let me know if you'd like me to dig into any of that!
 
 </td><td width="50%">
 
 ### After
 
 > **TL;DR**
-> - `verifyToken` calls a `jsonwebtoken` API removed in 9.0.
-> - Fix: `npm i jsonwebtoken@latest`, then rewrite `src/auth.ts:42-58`.
-> - ~15 min. Separately: 3 stale deps, stale README.
+> - `listOrders` runs one customer query per row: 241 queries per page.
+> - Fix: add `include: { customer: true }` at `src/orders/repository.ts:88`, drop the loop under it.
+> - ~10 min. Separately: `invoices/repository.ts` has the same bug.
 >
 > <details><summary>Full detail</summary>
 >
-> The auth flow has three stages — middleware, token verification, cookie serialization. The break is in stage two...
+> The endpoint has three stages — fetch, resolve, serialize. All of the cost is in stage two...
 >
 > *(the rest, in full, one click away)*
 >
@@ -149,13 +149,13 @@ When output goes to **another agent** instead of a human, `tldr` switches to a p
 ````markdown
 ```tldr
 status: ok
-summary: Fixed token refresh race in auth middleware; 3 tests added.
+summary: Removed N+1 in listOrders; orders page drops from 241 queries to 2.
 changed:
-  - src/auth.ts:42-58
-  - test/auth.spec.ts
+  - src/orders/repository.ts:88-104
+  - test/orders.bench.ts
 next: none
-risk: low — touches session invalidation, watch for early logouts
-full: docs/reports/auth-refresh-fix.md
+risk: low — changes row ordering when a customer record is null
+full: docs/reports/orders-n1.md
 ```
 ````
 

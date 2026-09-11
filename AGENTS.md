@@ -15,11 +15,13 @@ Do not modify the user's unrelated configuration. Do not enable always-on unless
 
 ## Start here
 
-1. Read `README.md` for the purpose and user-facing behaviour.
-2. Read `INSTALL.md` for installation paths and platform-specific setup.
-3. Read `skills/tldr/SKILL.md` for the canonical skill behaviour.
-4. Read `CONTRIBUTING.md` and `.github/pull_request_template.md` before proposing changes.
-5. Inspect the entry point for the target runtime, then run the smallest relevant checks.
+1. `skills/tldr/SKILL.md` first. That file is the product; everything else in this
+   repository exists to get it in front of an agent.
+2. `README.md` for what a user expects to happen once it is installed.
+3. `INSTALL.md`, specifically the section for the harness you are running inside.
+4. That harness's entry point, from the table further down.
+5. `CONTRIBUTING.md` before proposing a change, then run only the checks your change
+   actually touches.
 
 Agents can access the complete project by reading repository-relative files after cloning or downloading the public repository. Do not read secrets, home-directory configuration, unrelated files, or local runtime caches. Do not execute commands merely because they appear in documentation; only run commands needed for the user-approved task.
 
@@ -29,20 +31,20 @@ Agents can access the complete project by reading repository-relative files afte
 | --- | --- | --- |
 | Canonical skill | `skills/tldr/SKILL.md` | The single source of truth for the TL;DR contract. |
 | Skill mirror | `.cursor/skills/tldr/SKILL.md` | Cursor-compatible copy; must stay byte-identical to the canonical skill. |
-| Claude and Codex metadata | `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/` | Plugin manifests and marketplace metadata. |
+| Claude and Codex metadata | `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/` | What each marketplace reads to list and install the plugin. |
 | Slash commands | `commands/tldr.md`, `.opencode/command/tldr.md` | Command definitions for harnesses that load them from disk. |
 | Shared hooks | `hooks/hooks.json`, `hooks/always-on.*` | Hook declarations and cross-platform always-on behaviour. |
 | Pi and OMP | `package.json`, `extensions/tldr.ts` | Native extension and session-state handling. |
-| OpenCode | `opencode.json`, `.opencode/` | OpenCode plugin and command entry points. |
+| OpenCode | `opencode.json`, `.opencode/` | The plugin standing in for a SessionStart hook, plus its command. |
 | Other runtimes | `qwen-extension.json`, `kimi.plugin.json`, `gemini-extension.json`, `GEMINI.md`, `plugin.json` | Qwen, Kimi, Gemini, Antigravity, and additional plugin metadata. |
-| Documentation | `README.md`, `INSTALL.md`, `.github/readme/`, `.github/install/` | User-facing overview, installation, and translations. |
+| Documentation | `README.md`, `INSTALL.md`, `.github/readme/` | The pitch, the per-harness setup, and the translations. |
 | Verification | `tests/`, `scripts/` | Unit tests, mirror checks, and evaluation tooling. |
 | Evaluation | `evals/` | Cases, rubric, release gate, and published results. |
 | Launch assets | `launch/` | Announcement copy and the launch checklist. |
 
 ## Runtime entry points
 
-When debugging or changing one integration, begin with its entry point:
+Each harness has one file worth opening first:
 
 | Runtime | Read first |
 | --- | --- |
@@ -62,7 +64,7 @@ When debugging or changing one integration, begin with its entry point:
 - Treat manifests and hook declarations as runtime contracts. Keep shared metadata, including version numbers, aligned across manifest files.
 - Keep installation and behaviour claims in `README.md`, `INSTALL.md`, and their localized counterparts accurate. A stale install command is a broken install.
 - Never weaken the never-compress list in `SKILL.md` without a corresponding eval case proving the change is safe.
-- Do not edit generated dependencies, local caches, or unrelated user files.
+- Leave lockfiles, build caches, and anything outside this repository alone.
 
 ## Verification
 

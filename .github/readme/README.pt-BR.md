@@ -61,9 +61,9 @@ Nada é descartado. Você escolhe a profundidade.
 
 ```markdown
 **TL;DR**
-- A autenticação falha porque `verifyToken` usa a API do `jsonwebtoken` anterior à 9.0.
-- Correção: atualize o pacote e reescreva `src/auth.ts:42-58`.
-- ~15 minutos se os testes de auth já cobrirem esse caminho.
+- `listOrders` consulta a tabela de clientes uma vez por linha: 241 idas e voltas para renderizar uma página.
+- Correção: passe `include: { customer: true }` em `src/orders/repository.ts:88` e remova o laço abaixo.
+- ~10 minutos. O benchmark de pedidos já cobre esse caminho.
 
 <details>
 <summary>Detalhe completo</summary>
@@ -111,12 +111,12 @@ Quando a saída vai para **outro agente** em vez de uma pessoa, `tldr` muda para
 ````markdown
 ```tldr
 status: ok
-summary: Fixed token refresh race in auth middleware; 3 tests added.
+summary: Removed N+1 in listOrders; orders page drops from 241 queries to 2.
 changed:
-  - src/auth.ts:42-58
+  - src/orders/repository.ts:88-104
 next: none
-risk: low — touches session invalidation, watch for early logouts
-full: docs/reports/auth-refresh-fix.md
+risk: low — changes row ordering when a customer record is null
+full: docs/reports/orders-n1.md
 ```
 ````
 

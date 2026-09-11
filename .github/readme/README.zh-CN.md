@@ -61,9 +61,9 @@ claude plugin install tldr@tldr
 
 ```markdown
 **TL;DR**
-- 认证失败：`verifyToken` 用了 9.0 已移除的 `jsonwebtoken` API。
-- 修复：升级依赖，然后改写 `src/auth.ts:42-58`。
-- 如果认证测试已覆盖该路径，约 15 分钟。
+- `listOrders` 每行都查一次客户表：渲染一页要 241 次数据库往返。
+- 修复：在 `src/orders/repository.ts:88` 传入 `include: { customer: true }`，并删掉它下面的循环。
+- 约 10 分钟。订单基准测试已经覆盖这条路径。
 
 <details>
 <summary>完整内容</summary>
@@ -111,12 +111,12 @@ claude plugin install tldr@tldr
 ````markdown
 ```tldr
 status: ok
-summary: Fixed token refresh race in auth middleware; 3 tests added.
+summary: Removed N+1 in listOrders; orders page drops from 241 queries to 2.
 changed:
-  - src/auth.ts:42-58
+  - src/orders/repository.ts:88-104
 next: none
-risk: low — touches session invalidation, watch for early logouts
-full: docs/reports/auth-refresh-fix.md
+risk: low — changes row ordering when a customer record is null
+full: docs/reports/orders-n1.md
 ```
 ````
 

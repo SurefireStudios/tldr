@@ -61,9 +61,9 @@ claude plugin install tldr@tldr
 
 ```markdown
 **TL;DR**
-- 認証が失敗する原因は `verifyToken` が 9.0 で削除された `jsonwebtoken` API を使っていること。
-- 修正: パッケージを更新し、`src/auth.ts:42-58` を書き換える。
-- 認証テストがこの経路をすでにカバーしていれば約 15 分。
+- `listOrders` が行ごとに顧客テーブルを引いている: 1 ページの描画に 241 往復。
+- 修正: `src/orders/repository.ts:88` で `include: { customer: true }` を渡し、下のループを削除する。
+- 約 10 分。注文のベンチマークがこの経路をすでにカバーしている。
 
 <details>
 <summary>詳細</summary>
@@ -111,12 +111,12 @@ claude plugin install tldr@tldr
 ````markdown
 ```tldr
 status: ok
-summary: Fixed token refresh race in auth middleware; 3 tests added.
+summary: Removed N+1 in listOrders; orders page drops from 241 queries to 2.
 changed:
-  - src/auth.ts:42-58
+  - src/orders/repository.ts:88-104
 next: none
-risk: low — touches session invalidation, watch for early logouts
-full: docs/reports/auth-refresh-fix.md
+risk: low — changes row ordering when a customer record is null
+full: docs/reports/orders-n1.md
 ```
 ````
 
