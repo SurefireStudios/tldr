@@ -68,6 +68,12 @@ TL;DR
 
 Pick based on the surface you are writing to, not on habit. If you cannot tell, use the divider: it degrades gracefully in both places.
 
+### When there is nothing to fold
+
+If the whole answer is short — roughly under 150 words — skip the scaffolding. Write the answer, ordered so the most important sentence comes first.
+
+The shape exists to protect a reader from a wall of text. Where there is no wall, a header, three bullets and a fold cost more than they save, and the reader still has to read all of it. Ceremony is a kind of verbosity.
+
 ### What goes in the three lines
 
 In this order, and only these:
@@ -75,6 +81,8 @@ In this order, and only these:
 1. **What is true** — the answer, the finding, or the outcome.
 2. **What to do** — one concrete action: a command, a path, a decision.
 3. **What it costs** — time, risk, money, or the caveat that would change the decision.
+
+Each line stays under about twenty words. A summary line that runs to three clauses has stopped summarising.
 
 If a line would be empty, drop it. Two honest lines beat three padded ones. Never invent a cost line to reach three.
 
@@ -142,11 +150,18 @@ Paths, line numbers, commands, error codes, function names. A TL;DR full of noun
 Bad: "Add eager loading to the repository and re-run the benchmark."
 Good: "Add `include: { customer: true }` at `src/orders/repository.ts:88`, then run `npm run bench -- orders`."
 
-### 4. The detail stays complete
+### 4. The detail continues the TL;DR; it never repeats it
 
-Do not thin the detail because the TL;DR exists. The fold is not permission to write less — it is permission to write more, because the reader is no longer paying for it up front. Reasoning, alternatives considered, caveats, and the things you nearly did all belong there.
+The detail begins where the summary stopped. Do not restate the finding, the fix, or the cost — the reader has just read them. Open on the first thing the TL;DR did not already say.
 
-This is the rule most likely to decay over a long session. Check it.
+Restating is the most expensive habit available to you. It makes the reader read the same sentence twice and charges them for it twice.
+
+Bad: TL;DR says "`listOrders` runs one query per row", then the detail opens "The problem is that `listOrders` runs one query per row."
+Good: the detail opens "The per-row lookup was added in #412 to fix a null-customer crash, which is why removing it needs the null guard below."
+
+Keep the detail complete: reasoning, alternatives considered, caveats, and the things you nearly did all belong there. Complete is not the same as expansive. Include what changes the reader's understanding; cut anything that only fills the section out.
+
+If the TL;DR already covered everything, there is no detail section. Stop.
 
 ### 5. Compress tool output at the boundary
 
@@ -223,7 +238,9 @@ Override the defaults when:
 2. **A destructive or irreversible action is ahead.** Safety outranks brevity. Full warning, above the fold, confirm before acting.
 3. **The answer is shorter than the TL;DR would be.** Do not wrap a one-line answer in a three-line summary and a fold. "17 × 6 = 102" is the whole response. Ceremony is a kind of verbosity.
 4. **Real ambiguity in the request.** One short clarifying question beats a confidently compressed answer to the wrong question.
-5. **The harness outranks this skill.** Inside an agent harness, the system prompt wins: announce tool calls when required, do the work instead of asking permission for things you were told to do. The constraint wins; the shape stays.
+5. **The harness outranks this skill.** Inside an agent harness, the system prompt wins: announce tool calls when required, do the work instead of asking permission for things you were told to do, point time estimates at whoever executes the steps. The constraint wins, the shape stays.
+
+   This applies only to work you can actually carry out. If you have no tools, no file access, or nothing to act on, say so in one line and answer with what you do have. Never emit a tool call you cannot issue: a fragment of tool syntax is worse for the reader than a plain answer, because it looks like progress and is not.
 6. **The reader asked for full output.** An explicit request beats every rule here, until they say otherwise.
 
 ## Pre-send check
@@ -232,10 +249,12 @@ Before sending, verify:
 
 1. **Does the TL;DR stand alone?** Cover the detail and read only the top. Is anything up there now misleading, or unresolvable without scrolling?
 2. **Is anything on the never-compress list hiding in the fold?** Move it up.
-3. **Did the detail get thinner because the TL;DR exists?** If so, put it back.
-4. **Is there a forward reference?** "See below", "as noted", "several things" — replace it with the thing itself.
-5. **Is the first token of the response the TL;DR?** Delete anything above it.
-6. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines, write the file.
+3. **Does the detail repeat anything the TL;DR already said?** Cut the repetition, not the substance.
+4. **Did the detail get thinner because the TL;DR exists?** If so, put it back.
+5. **Is there a forward reference?** "See below", "as noted", "several things" — replace it with the thing itself.
+6. **Is the first token of the response the TL;DR?** Delete anything above it.
+7. **Is this short enough that the scaffolding is the bulk of it?** Then drop the scaffolding and just answer.
+8. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines, write the file.
 
 Then the real test: **if the reader reads three lines and closes the window, are they correctly informed and unblocked?**
 
