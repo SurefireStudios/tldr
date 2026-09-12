@@ -156,14 +156,27 @@ Good: "Only `src/users.ts` was shown; check other call sites before shipping."
 
 If the scope of what you were given is narrower than the scope of the question, say which you answered. That boundary is information, and it is the first thing a short answer tends to drop.
 
-### 4. Name things exactly
+### 4. Never fabricate a tool call or its result
+
+Write only what actually happened. If you did not run something, do not render it as though you did.
+
+Two failures, the second far worse than the first:
+
+- Emitting tool-call syntax you did not issue. It looks like progress, delivers none, and leaves the reader holding nothing.
+- Writing the *output* of that call. An invented `Result`, a made-up file listing, a fabricated "No files found" — this is not a formatting slip, it is telling the reader something false about the state of their system.
+
+If you have no tools, no file access, or nothing to act on, say so in one line and answer with what you do have. A plain answer with a stated limit beats a convincing fiction every time.
+
+Check the message before reaching for anything. When the material is already in front of you — a file pasted in, a log quoted, a command written out — answer from it directly. Reaching for a tool when the answer is already in the conversation is the most common way this rule fails.
+
+### 5. Name things exactly
 
 Paths, line numbers, commands, error codes, function names. A TL;DR full of nouns like "the config" or "some dependencies" has compressed away the only part worth keeping.
 
 Bad: "Add eager loading to the repository and re-run the benchmark."
 Good: "Add `include: { customer: true }` at `src/orders/repository.ts:88`, then run `npm run bench -- orders`."
 
-### 5. The detail continues the TL;DR; it never repeats it
+### 6. The detail continues the TL;DR; it never repeats it
 
 The detail begins where the summary stopped. Do not restate the finding, the fix, or the cost — the reader has just read them. Open on the first thing the TL;DR did not already say.
 
@@ -179,11 +192,11 @@ This bites hardest on commands and code. **A command, path, or code block appear
 - If the TL;DR carries it, the detail refers back to it rather than reprinting it.
 - If the detail needs it inline — a numbered procedure the reader follows with the terminal open — keep it there, and have the TL;DR name the action instead.
 
-So: `raise the container memory limit` on top and `docker run -m 1g` in the step, or the command on top and "after that returns, check the exit code" below. Never both. This is the one place where naming things exactly (rule 4) and not repeating yourself pull against each other, and this is how it resolves.
+So: `raise the container memory limit` on top and `docker run -m 1g` in the step, or the command on top and "after that returns, check the exit code" below. Never both. This is the one place where naming things exactly (rule 5) and not repeating yourself pull against each other, and this is how it resolves.
 
 If the TL;DR already covered everything, there is no detail section. Stop.
 
-### 6. Compress tool output at the boundary
+### 7. Compress tool output at the boundary
 
 Do not paste a 400-line test run, dependency tree, or log dump into the response. Report the shape and the signal:
 
@@ -192,17 +205,17 @@ Good: "7 of 340 tests fail, all in `checkout.spec.ts`. First failure: `Assertion
 
 Keep the verbatim text of the failures. Drop the passes.
 
-### 7. One TL;DR per response
+### 8. One TL;DR per response
 
 Not one per section. If the response covers three topics, the TL;DR covers all three in three lines, and the detail has three sections. Repeated TL;DR blocks defeat the purpose.
 
-### 8. Write files, not walls of text
+### 9. Write files, not walls of text
 
 When the detail is genuinely long — a report, an audit, a migration plan, a research summary — write it to a file and put the path in the TL;DR. A 3,000-word answer in the transcript is a 3,000-word answer nobody will scroll back to, and it is thousands of tokens in every subsequent turn.
 
 Good: "Audit written to `docs/audit-2026-09.md`. 4 high-severity findings, all in the payments path. Read `## Findings` first."
 
-### 9. No preamble, no recap, no closers
+### 10. No preamble, no recap, no closers
 
 Forbidden openers: "Great question", "Let me", "I'll", "Sure!", "Looking at your", "To answer your question".
 
@@ -258,13 +271,9 @@ Override the defaults when:
 2. **A destructive or irreversible action is ahead.** Safety outranks brevity. Full warning, above the fold, confirm before acting.
 3. **The answer is shorter than the TL;DR would be.** Do not wrap a one-line answer in a three-line summary and a fold. "17 × 6 = 102" is the whole response. Ceremony is a kind of verbosity.
 4. **Real ambiguity in the request.** One short clarifying question beats a confidently compressed answer to the wrong question.
-5. **The harness outranks this skill.** Inside an agent harness, the system prompt wins: announce tool calls when required, do the work instead of asking permission for things you were told to do, point time estimates at whoever executes the steps. The constraint wins, the shape stays.
+5. **The harness outranks this skill.** Inside an agent harness the system prompt wins. Announce tool calls when it requires that, and point time estimates at whoever executes the steps. The constraint wins; the shape stays.
 
-   This applies only to work you can actually carry out. If you have no tools, no file access, or nothing to act on, say so in one line and answer with what you do have.
-
-   **Never emit tool-call syntax you cannot execute.** A fragment of tool markup is worse than a plain answer: it looks like progress, delivers none, and leaves the reader holding nothing.
-
-   Check the message first. If the material you need is already in front of you — a file pasted in, a log quoted, a command written out — answer from it directly. Reaching for a tool when the answer is already in the conversation is the most common way this rule fails.
+   This skill governs the *shape* of what you write. It says nothing about whether to act, which tools to reach for, or when to ask first — those are the harness's to decide, and it has already decided them. Where this skill appears to have an opinion about your behaviour rather than your output, it does not. Defer.
 6. **The reader asked for full output.** An explicit request beats every rule here, until they say otherwise.
 
 ## Pre-send check
@@ -278,7 +287,7 @@ Before sending, verify:
 5. **Is there a forward reference?** "See below", "as noted", "several things" — replace it with the thing itself.
 6. **Is the first token of the response the TL;DR?** Delete anything above it.
 7. **Is this short enough that the scaffolding is the bulk of it?** Then drop the scaffolding and just answer — without dropping anything the answer needed.
-8. **Is there tool-call syntax in this response?** If you could not execute it, delete it and answer from what is in the message.
+8. **Is there tool-call syntax, or the output of a tool, in this response?** If you did not actually run it, delete both and answer from what is in the message. Inventing the result is the worse half.
 9. **Does a command or code block appear twice?** Keep the occurrence the reader will act on; cut the other.
 10. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines, write the file.
 

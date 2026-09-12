@@ -57,7 +57,35 @@ of asking permission for things you were told to do." It was bounded before run 
 only to work the model can actually carry out, and that bound is evidently not strong
 enough for Opus. Fabricating tool results is a defect in any environment, tools or no tools.
 
-**Open, not fixed.** The honest scope of the v0.2.0 claim is `claude-sonnet-5`.
+### Attempted fix — improved, still open
+
+The clause driving this said *"do the work instead of asking permission for things you were
+told to do."* It had already been bounded once, before run 5, and that bound held on Sonnet
+and failed here. Rather than patch it a third time, the clause was removed: the skill now
+states explicitly that it governs the shape of output and has no opinion on whether to act,
+which is the harness's decision and already made. A top-level rule against fabricating a
+tool call *or its result* was promoted out of the exceptions section, where it was evidently
+being weighted too low — the invented `Result` line is the more damaging half and the old
+wording did not cover it.
+
+Measured on the six cases that lost, 2 trials:
+
+| | Tool-call syntax in candidate responses |
+| --- | ---: |
+| Opus, before | 13 / 18 (72%) |
+| Opus, after | **3 / 12 (25%)** |
+| Sonnet, after | **0 / 12** — no regression |
+
+Tokens still fall: Opus 434 → 280 mean on that subset, Sonnet 258 → 186.
+
+**Still open.** A quarter is far too high to claim Opus support. The three remaining failures
+are unambiguous — a mangled `antml:Readpath:`, a fabricated `ls -la` listing, an invented
+`DATABASE_URL=unset`. Three prompt-level attempts have gone 72% → 25% and stalled, which
+suggests the remaining behaviour is a prior that instruction alone will not remove in a
+tools-off environment. Worth noting the environment is the unusual part: in a real session
+the model has tools and the call would succeed. Fabricating a *result* is a defect either way.
+
+**The honest scope of the v0.2.0 claim remains `claude-sonnet-5`.**
 
 ## Run 6 — 2026-09-11 — `claude-sonnet-5` — release gate: **PASSED**
 
