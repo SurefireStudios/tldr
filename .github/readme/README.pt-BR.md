@@ -43,6 +43,14 @@ Para os demais agentes: 🔗 **[INSTALL.md](../../INSTALL.md)**
 
 Depois digite `/tldr`.
 
+<p align="center">
+  <img src="../../assets/demo.gif" alt="A verbose answer, then the same question with tldr on" width="820" />
+</p>
+
+<p align="center">
+  <sub>Saída real da suíte de avaliação, não uma maquete — as duas metades estão em <a href="../../evals/results/run6-pass/">evals/results/run6-pass/</a>.</sub>
+</p>
+
 ## O problema
 
 Na verdade, são dois.

@@ -43,6 +43,14 @@ claude plugin install tldr@tldr
 
 然后输入 `/tldr`。
 
+<p align="center">
+  <img src="../../assets/demo.gif" alt="A verbose answer, then the same question with tldr on" width="820" />
+</p>
+
+<p align="center">
+  <sub>真实的评测输出，不是效果图——两半都在 <a href="../../evals/results/run6-pass/">evals/results/run6-pass/</a>。</sub>
+</p>
+
 ## 它解决什么问题
 
 其实是两个问题。

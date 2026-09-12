@@ -43,6 +43,14 @@ claude plugin install tldr@tldr
 
 そのあと `/tldr` と入力します。
 
+<p align="center">
+  <img src="../../assets/demo.gif" alt="A verbose answer, then the same question with tldr on" width="820" />
+</p>
+
+<p align="center">
+  <sub>モックではなく、評価スイートの実際の出力です。両方とも <a href="../../evals/results/run6-pass/">evals/results/run6-pass/</a> にあります。</sub>
+</p>
+
 ## 何が問題か
 
 問題は 2 つあります。

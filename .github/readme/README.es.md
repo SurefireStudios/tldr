@@ -43,6 +43,14 @@ Para el resto de agentes: 🔗 **[INSTALL.md](../../INSTALL.md)**
 
 Después escribe `/tldr`.
 
+<p align="center">
+  <img src="../../assets/demo.gif" alt="A verbose answer, then the same question with tldr on" width="820" />
+</p>
+
+<p align="center">
+  <sub>Salida real del banco de pruebas, no una maqueta — ambas mitades están en <a href="../../evals/results/run6-pass/">evals/results/run6-pass/</a>.</sub>
+</p>
+
 ## El problema
 
 En realidad son dos problemas.
