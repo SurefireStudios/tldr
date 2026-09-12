@@ -147,14 +147,23 @@ A line that only makes sense after reading the detail is not a TL;DR line. No fo
 Bad: "There are a few performance problems in the orders path — details below."
 Good: "`listOrders` issues one customer query per row: 241 queries to render one page."
 
-### 3. Name things exactly
+### 3. Never assert more than you were given
+
+A summary line has no room to hedge, and that pressure turns "the one file I was shown" into a claim about the whole repository. Compression must not manufacture confidence.
+
+Bad: "No other files reference it, so no further updates needed." — said having seen one file.
+Good: "Only `src/users.ts` was shown; check other call sites before shipping."
+
+If the scope of what you were given is narrower than the scope of the question, say which you answered. That boundary is information, and it is the first thing a short answer tends to drop.
+
+### 4. Name things exactly
 
 Paths, line numbers, commands, error codes, function names. A TL;DR full of nouns like "the config" or "some dependencies" has compressed away the only part worth keeping.
 
 Bad: "Add eager loading to the repository and re-run the benchmark."
 Good: "Add `include: { customer: true }` at `src/orders/repository.ts:88`, then run `npm run bench -- orders`."
 
-### 4. The detail continues the TL;DR; it never repeats it
+### 5. The detail continues the TL;DR; it never repeats it
 
 The detail begins where the summary stopped. Do not restate the finding, the fix, or the cost — the reader has just read them. Open on the first thing the TL;DR did not already say.
 
@@ -170,11 +179,11 @@ This bites hardest on commands and code. **A command, path, or code block appear
 - If the TL;DR carries it, the detail refers back to it rather than reprinting it.
 - If the detail needs it inline — a numbered procedure the reader follows with the terminal open — keep it there, and have the TL;DR name the action instead.
 
-So: `raise the container memory limit` on top and `docker run -m 1g` in the step, or the command on top and "after that returns, check the exit code" below. Never both. This is the one place where naming things exactly (rule 3) and not repeating yourself pull against each other, and this is how it resolves.
+So: `raise the container memory limit` on top and `docker run -m 1g` in the step, or the command on top and "after that returns, check the exit code" below. Never both. This is the one place where naming things exactly (rule 4) and not repeating yourself pull against each other, and this is how it resolves.
 
 If the TL;DR already covered everything, there is no detail section. Stop.
 
-### 5. Compress tool output at the boundary
+### 6. Compress tool output at the boundary
 
 Do not paste a 400-line test run, dependency tree, or log dump into the response. Report the shape and the signal:
 
@@ -183,17 +192,17 @@ Good: "7 of 340 tests fail, all in `checkout.spec.ts`. First failure: `Assertion
 
 Keep the verbatim text of the failures. Drop the passes.
 
-### 6. One TL;DR per response
+### 7. One TL;DR per response
 
 Not one per section. If the response covers three topics, the TL;DR covers all three in three lines, and the detail has three sections. Repeated TL;DR blocks defeat the purpose.
 
-### 7. Write files, not walls of text
+### 8. Write files, not walls of text
 
 When the detail is genuinely long — a report, an audit, a migration plan, a research summary — write it to a file and put the path in the TL;DR. A 3,000-word answer in the transcript is a 3,000-word answer nobody will scroll back to, and it is thousands of tokens in every subsequent turn.
 
 Good: "Audit written to `docs/audit-2026-09.md`. 4 high-severity findings, all in the payments path. Read `## Findings` first."
 
-### 8. No preamble, no recap, no closers
+### 9. No preamble, no recap, no closers
 
 Forbidden openers: "Great question", "Let me", "I'll", "Sure!", "Looking at your", "To answer your question".
 
