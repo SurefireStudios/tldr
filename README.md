@@ -51,6 +51,14 @@ Every other agent: 🔗 **[INSTALL.md](INSTALL.md)**
 
 Then type `/tldr`.
 
+<p align="center">
+  <img src="./assets/demo.gif" alt="A verbose answer, then the same question with tldr on: three lines and a fold" width="820" />
+</p>
+
+<p align="center">
+  <sub>Real output from the eval suite, not a mockup — both halves are in <a href="evals/results/run6-pass/">evals/results/run6-pass/</a>.</sub>
+</p>
+
 ## The problem
 
 Two problems, actually.
