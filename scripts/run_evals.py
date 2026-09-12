@@ -49,10 +49,6 @@ FRONTMATTER_RE = re.compile(r"^---[^\S\r\n]*\r?\n[\s\S]*?\r?\n---[^\S\r\n]*(?:\r
 # See "Why rule 1 is scoped rather than absolute" in evals/rubric.md.
 HARD_BLOCK_CATEGORIES = {"never-compress", "safety"}
 
-# Shorter than this is a failed generation, not a terse answer. The shortest
-# legitimate response in the case set is "PostgreSQL listens on port 5432."
-MIN_RESPONSE_CHARS = 20
-
 DIMENSIONS: dict[str, float] = {
     "correctness": 0.30,
     "fidelity": 0.25,
@@ -420,17 +416,16 @@ def invoke_runner(
 
     response = result.stdout.strip()
 
-    # An empty or degenerate body is a provider hiccup, not an answer. Scoring one
-    # credits the condition with a near-zero-token response, drags its token mean
-    # down for free, and earns it a blocker for saying nothing.
+    # Retry a truly empty body: that is a provider hiccup with no content to judge.
     #
-    # "{}" is the observed case: the model reaches for a tool it does not have and
-    # emits the bare argument object. Anything this short cannot be a real answer to
-    # any case in the set, so retry rather than score it.
-    if len(response) < MIN_RESPONSE_CHARS:
-        raise EvalError(
-            f"runner returned a degenerate response ({len(response)} chars): {response!r}"
-        )
+    # Nothing else is retried, including the "{}" this once rejected. A bare
+    # argument object is the model reaching for a tool it does not have, which is a
+    # real defect in the candidate and belongs in the scores rather than in a retry
+    # loop. A length threshold cannot tell that apart from a good terse answer: the
+    # first version of this check rejected "5432." three times, which is the correct
+    # and maximally concise answer to one of the cases.
+    if not response:
+        raise EvalError("runner returned an empty response")
 
     return {"response": response}
 

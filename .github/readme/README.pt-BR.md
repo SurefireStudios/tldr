@@ -152,13 +152,15 @@ Medido em 16 casos × 3 tentativas contra uma linha de base sem skill (`claude-s
 
 | | Linha de base | Com tldr | |
 | --- | ---: | ---: | --- |
-| Tokens de saída (média) | 370 | **283** | −24% |
-| Mediana | 322 | **175** | −46% |
-| Agente para agente | 208 | **101** | −51% |
-| Acionabilidade | 4.375 | **4.688** | +0.312 |
-| Fidelidade | 4.667 | **4.542** | **−0.125** |
+| Tokens de saída (média) | 339 | **283** | −16% |
+| Mediana | 295 | **186** | −37% |
+| Correção | 4.771 | **4.979** | +0.208 |
+| Fidelidade | 4.521 | **4.750** | +0.229 |
+| Acionabilidade | 4.312 | **4.896** | +0.583 |
 
-**O critério de publicação está em FAILED**, em 2 de 5 regras: a fidelidade fica 0.025 fora da tolerância. Essa falha fica registrada em vez de ser ajustada para sumir — fidelidade existe justamente para pegar uma resposta que parece melhor só porque descartou algo, e no momento está pegando esta skill.
+Menos tokens **e** melhor em todas as dimensões, sem achados bloqueantes. O critério de publicação passa nas cinco regras.
+
+Agora as ressalvas, porque um número sem elas é marketing: a linha de base é regerada a cada execução e desta vez caiu, então cerca de um quarto do ganho é o ponto de comparação se movendo, não a skill. O erro padrão sobre os 48 pares é de cerca de 0.090. A candidata vence 34 pares e perde 11. E isto é uma única execução, em um único modelo.
 
 Publicar só uma delas é exatamente como afirmações sobre compressão acabam enganando. Metodologia e critérios em [`evals/RESULTS.md`](../../evals/RESULTS.md). Os números são publicados independentemente de favorecerem a skill.
 

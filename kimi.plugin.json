@@ -1,9 +1,12 @@
 {
   "name": "tldr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Too long; didn't read, for Kimi Code CLI. Three-line TL;DR first, full detail folded underneath.",
   "license": "MIT",
   "homepage": "https://github.com/SurefireStudios/tldr",
   "skills": "./skills/",
-  "interface": { "displayName": "TL;DR", "shortDescription": "Three-line summary first, detail folded underneath" }
+  "interface": {
+    "displayName": "TL;DR",
+    "shortDescription": "Three-line summary first, detail folded underneath"
+  }
 }

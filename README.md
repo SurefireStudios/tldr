@@ -184,24 +184,23 @@ The governing rule, in the skill's own words: *a reader who reads only the TL;DR
 
 ## Does it actually work?
 
-Partly. Here are the numbers, and the part that does not pass yet.
-
 Measured on 16 cases × 3 trials against `claude-sonnet-5`, blind-graded against a no-skill baseline:
 
 | | Baseline | With `tldr` | |
 | --- | ---: | ---: | --- |
-| Mean output tokens | 370 | **283** | −24% |
-| Median output tokens | 322 | **175** | −46% |
-| Agent-to-agent output | 208 | **101** | −51% |
-| Actionability | 4.375 | **4.688** | +0.312 |
-| Concision | 3.646 | **4.500** | +0.854 |
-| Safety | 4.625 | **4.646** | +0.021 |
-| Correctness | 4.896 | 4.833 | −0.062 |
-| **Fidelity** | 4.667 | **4.542** | **−0.125** |
+| Mean output tokens | 339 | **283** | −16% |
+| Median output tokens | 295 | **186** | −37% |
+| Correctness | 4.771 | **4.979** | +0.208 |
+| Fidelity | 4.521 | **4.750** | +0.229 |
+| Actionability | 4.312 | **4.896** | +0.583 |
+| Safety | 4.417 | **4.604** | +0.188 |
+| Concision | 3.604 | **4.667** | +1.063 |
 
-**The release gate currently reads FAILED**, on two of five rules: fidelity is 0.025 outside tolerance, and one trial in three of one case still misbehaves. Three rules pass, and weighted quality beats baseline by +0.101.
+Fewer tokens **and** better on every dimension, with zero blocking findings. The release gate passes on all five rules.
 
-That failure is left in place rather than tuned away. Fidelity is the dimension that exists to catch a response which looks better only because it dropped something, and it is currently catching this skill — the cause is a rule added to save tokens that reads as "write less" where it meant "drop the scaffolding". [`evals/RESULTS.md`](evals/RESULTS.md) has the diagnosis, the per-case numbers, and every superseded run.
+**Now the caveats, because a number without them is marketing.** The baseline is regenerated each run and drifted down this time, so roughly a quarter of the headline gain is the comparison point moving rather than the skill improving. Across all 48 paired rows the standard error is about 0.090. The candidate wins 34 pairs, loses 11 — better on average, not better every time. And this is one run, on one model.
+
+It took six runs to get here, and the first four failed the gate. [`evals/RESULTS.md`](evals/RESULTS.md) has all of them, including the run where optimising for tokens cost fidelity and the gate caught it, and the check I added that rejected `5432.` as a malformed answer.
 
 Reproduce it:
 
@@ -210,7 +209,7 @@ scripts/run_full_eval.sh --smoke   # cheap, proves the wiring
 scripts/run_full_eval.sh           # the real thing
 ```
 
-The harness measures **tokens and fidelity together**, and the gate fails a candidate whose fidelity drops even when tokens improve. A compression claim without that second number is not a result, which is why it is not offered as one here.
+The harness measures **tokens and fidelity together**, and the gate fails a candidate whose fidelity drops even when tokens improve. That rule fired on runs 2, 3 and 4 — it is load-bearing, not decoration.
 
 ## Supported agents
 

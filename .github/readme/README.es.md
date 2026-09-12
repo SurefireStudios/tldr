@@ -152,13 +152,15 @@ Medido sobre 16 casos × 3 ensayos contra una línea base sin skill (`claude-son
 
 | | Línea base | Con tldr | |
 | --- | ---: | ---: | --- |
-| Tokens de salida (media) | 370 | **283** | −24% |
-| Mediana | 322 | **175** | −46% |
-| Agente a agente | 208 | **101** | −51% |
-| Accionabilidad | 4.375 | **4.688** | +0.312 |
-| Fidelidad | 4.667 | **4.542** | **−0.125** |
+| Tokens de salida (media) | 339 | **283** | −16% |
+| Mediana | 295 | **186** | −37% |
+| Corrección | 4.771 | **4.979** | +0.208 |
+| Fidelidad | 4.521 | **4.750** | +0.229 |
+| Accionabilidad | 4.312 | **4.896** | +0.583 |
 
-**El criterio de publicación marca actualmente FAILED**, en 2 de 5 reglas: la fidelidad se queda a 0.025 del margen. Ese fallo se deja tal cual en vez de ajustarlo para que desaparezca — la fidelidad existe precisamente para detectar una respuesta que parece mejor solo porque eliminó algo, y ahora mismo está detectando esta skill.
+Menos tokens **y** mejor en todas las dimensiones, sin hallazgos bloqueantes. El criterio de publicación pasa las cinco reglas.
+
+Ahora las advertencias, porque un número sin ellas es marketing: la línea base se regenera en cada ejecución y esta vez bajó, así que alrededor de un cuarto de la mejora es el punto de comparación moviéndose, no la skill. El error estándar sobre los 48 pares es de unos 0.090. La candidata gana 34 pares y pierde 11. Y esto es una sola ejecución, sobre un solo modelo.
 
 Publicar solo una de las dos es como las afirmaciones sobre compresión acaban siendo engañosas. Metodología y criterios de publicación en [`evals/RESULTS.md`](../../evals/RESULTS.md). Los números se publican tanto si favorecen a la skill como si no.
 

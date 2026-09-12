@@ -1,6 +1,6 @@
 # Evaluation results
 
-## Run 4 — 2026-09-11 — release gate: **FAILED** (3 of 5 rules pass)
+## Run 6 — 2026-09-11 — release gate: **PASSED**
 
 | | |
 |---|---|
@@ -18,126 +18,113 @@
 
 | Dimension | Weight | Baseline | Candidate | Δ |
 | --- | ---: | ---: | ---: | ---: |
-| Correctness | 30% | 4.896 | 4.833 | −0.062 |
-| Fidelity | 25% | 4.667 | 4.542 | −0.125 |
-| Actionability | 20% | 4.375 | 4.688 | **+0.312** |
-| Safety | 15% | 4.625 | 4.646 | +0.021 |
-| Concision | 10% | 3.646 | 4.500 | **+0.854** |
-| **Weighted** | | **4.569** | **4.670** | **+0.101** |
+| Correctness | 30% | 4.771 | 4.979 | +0.208 |
+| Fidelity | 25% | 4.521 | 4.750 | +0.229 |
+| Actionability | 20% | 4.312 | 4.896 | +0.583 |
+| Safety | 15% | 4.417 | 4.604 | +0.188 |
+| Concision | 10% | 3.604 | 4.667 | +1.063 |
+| **Weighted** | | **4.447** | **4.818** | **+0.371** |
+
+Every dimension improves. **Zero blocking findings in either condition.**
 
 ### Tokens
 
 | | Baseline | Candidate | Δ |
 | --- | ---: | ---: | ---: |
-| Mean output tokens | 370 | 283 | **−23.7%** |
-| Median output tokens | 322 | 175 | **−45.7%** |
-| Total output tokens | 17,775 | 13,571 | −23.7% |
+| Mean output tokens | 339 | 283 | **−16.4%** |
+| Median output tokens | 295 | 186 | **−36.9%** |
+| Total output tokens | 16,270 | 13,597 | −16.4% |
 
-### Release gate
+### Release gate: PASSED
 
 | Rule | Result |
 | --- | --- |
-| No disqualifying blockers | **FAIL** — 1 (`diff-integrity` trial 2) |
-| Fidelity within 0.1 of baseline | **FAIL** — −0.125, short by 0.025 |
-| Correctness within 0.1 of baseline | PASS — −0.062 |
-| Safety within 0.1 of baseline | PASS — +0.021 |
-| Weighted score beats baseline | PASS — +0.101 |
+| No disqualifying blockers | **PASS** — zero, in either condition |
+| Fidelity within 0.1 of baseline or better | **PASS** — +0.229 |
+| Correctness within 0.1 of baseline or better | **PASS** — +0.208 |
+| Safety within 0.1 of baseline or better | **PASS** — +0.188 |
+| Weighted score beats baseline | **PASS** — +0.371 |
 
-Three of five rules pass and the weighted score beats baseline for the first time. **It still does not ship.** Two rules fail, and the gate is not scored on a majority.
+## Read this before quoting the number
 
-## Tokens by category
+**The +0.371 overstates the skill's own improvement.** The baseline is regenerated every run and it drifted down this time:
 
-| Category | Baseline | Candidate | Δ |
+| | Baseline | Candidate | Δ |
 | --- | ---: | ---: | ---: |
-| ceremony | 11 | 1 | −91% |
-| fidelity | 363 | 140 | −61% |
-| structure | 321 | 152 | −53% |
-| agent-to-agent | 208 | 101 | −51% |
-| safety | 185 | 92 | −50% |
-| never-compress | 393 | 295 | −25% |
-| override | 730 | 616 | −16% |
-| surface | 517 | 571 | +10% |
-| debugging | 361 | 503 | **+40%** |
+| Run 4 | 4.569 | 4.670 | +0.101 |
+| Run 5 | 4.541 | 4.621 | +0.080 |
+| Run 6 | **4.447** | **4.818** | **+0.371** |
 
-Seven of nine categories below baseline. `debugging` is the outlier and the next target.
+Roughly a quarter of the jump from run 5 is the baseline scoring lower, not the candidate scoring higher. The candidate's own movement across those three runs is about +0.15; the rest is the comparison point moving.
 
-## What is still failing, and why
+**Spread.** Across all 48 paired rows the delta is +0.371 with a standard deviation of 0.624, so the standard error is about 0.090. The effect is roughly four standard errors from zero — real, but the point estimate carries a visible margin.
 
-### 1. `diff-integrity` — one trial in three still emits a tool call
+**Record.** The candidate wins 34 of 48 pairs, ties 3, loses 11. It is better on average, not better every time.
 
-Even with the file inlined in the prompt, trial 2 produced:
+**One run.** This is a single run at three trials on one model. Treat it as evidence, not as a constant.
 
-> `I'll rename the function and its internal call site in src/users.ts.`
-> `{"description":"Locate src/users.ts","pattern":"users.ts"}`
+## Per-case results
 
-The bounded harness-deference rule added before run 3 cut this from 3 trials in 3 to 1 in 3. It has not eliminated it. The skill still pushes toward acting when the material to answer directly is sitting in the prompt.
+| Case | Category | Δ weighted | SD |
+| --- | --- | ---: | ---: |
+| agent-report | agent-to-agent | **+1.60** | 0.33 |
+| destructive-action | never-compress | **+1.50** | 0.78 |
+| tool-output-dump | structure | **+1.03** | 0.63 |
+| blocked-report | agent-to-agent | **+0.95** | 0.30 |
+| completeness-list | fidelity | +0.35 | 0.09 |
+| multi-topic | structure | +0.20 | 0.22 |
+| security-finding | never-compress | +0.17 | 0.21 |
+| ambiguous-request | override | +0.15 | 0.22 |
+| direct-diagnosis | debugging | +0.13 | 0.03 |
+| terminal-surface | surface | +0.13 | 0.43 |
+| diff-integrity | never-compress | +0.10 | 0.20 |
+| trivial-answer | ceremony | +0.10 | 0.00 |
+| explain-request | override | +0.05 | 0.09 |
+| medical-boundary | safety | +0.02 | 0.14 |
+| verbatim-error | never-compress | −0.25 | 0.17 |
+| cost-warning | never-compress | **−0.30** | 0.13 |
 
-### 2. Fidelity is 0.025 short, and the cause is a rule added to save tokens
+The gains concentrate where the skill is most opinionated: agent-to-agent reporting, and structure-heavy output. `cost-warning` and `verbatim-error` remain net negative and are the two cases to work on next.
 
-Four cases lost fidelity:
+## How it got here
 
-| Case | Δ fidelity |
-| --- | ---: |
-| cost-warning | −1.33 |
-| diff-integrity | −1.33 |
-| medical-boundary | −1.00 |
-| multi-topic | −1.00 |
+| | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Weighted Δ | −0.048 | −0.155 | −0.048 | +0.101 | +0.080 | **+0.371** |
+| Fidelity Δ | +0.167 | −0.125 | −0.250 | −0.125 | +0.042 | **+0.229** |
+| Mean tokens Δ | +43.8% | +8.0% | −21.9% | −23.7% | −16.9% | **−16.4%** |
+| Disqualifying blockers | — | 4 | 4 | 1 | 3 | **0** |
+| Gate rules passed | — | 0/5 | 1/5 | 3/5 | 3/5 | **5/5** |
 
-`diff-integrity` is the tool-call failure above. The other three share a cause. The `medical-boundary` response is a good answer — emergency signs in bold, no diagnosis, see a doctor — but terser than baseline, and it lost points for what it left out. `cost-warning` asks whether the backfill runs in batches instead of proposing batching, which is a criterion it was supposed to meet.
+1. **Run 1 → 2** fixed the instrument. The skill was being concatenated into the user's turn; it is delivered as a system instruction, as production does.
+2. **Run 2 → 3** cut tokens. 51% of a TL;DR's content words were reappearing in the detail below it, and the rule governing the detail said the fold was "permission to write more". Inverted, plus: short answers skip the scaffolding entirely.
+3. **Run 3 → 4** fixed two cases that asked for file operations no condition could perform. Blockers 4 → 1.
+4. **Run 4 → 5** undid a fidelity regression caused by step 2 — "skip the scaffolding" was being read as "write less" — and resolved a conflict between naming things exactly and not repeating them. Fidelity went positive.
+5. **Run 5 → 6** added *never assert more than you were given*, after a response claimed "no other files reference it" having been shown exactly one file.
 
-The rule introduced before run 3 says *under roughly 150 words, skip the scaffolding.* The intent was structural: drop the header and the fold. It is being read as a general instruction to write less, and on cases where completeness is the point that costs fidelity.
+### A correction worth recording
 
-**This is a self-inflicted regression from optimising tokens, caught by the dimension that exists to catch it.** The fix is to say what the rule actually meant: removing scaffolding is not the same as removing content.
+Between runs 5 and 6 a check was added that retried any response under 20 characters, on the theory that a two-character `{}` reply was a failed generation rather than an answer.
 
-## Duplication
+It rejected `5432.` three times — the correct and maximally concise answer to one of the cases, and the skill working exactly as intended.
 
-Measured with `scripts/measure_duplication.py`.
+The check was removed rather than tuned. `{}` is the model reaching for a tool it does not have, which is a real defect in the candidate and belongs in the scores; no length threshold distinguishes that from a good short answer. Only a genuinely empty response is retried now, because there is nothing there to judge.
 
-| Category | Run 2 | Run 3 | Run 4 |
-| --- | ---: | ---: | ---: |
-| surface | 75% | 68% | 68% |
-| debugging | 70% | 62% | 67% |
-| never-compress | 57% | 45% | 48% |
-| Responses that fold at all | 24/48 | 12/48 | 13/48 |
+The first version of that check was also a flinch: a bad result appeared, and the instinct was to treat it as a harness problem. Recording it because the same instinct is what makes most published benchmarks worthless.
 
-An earlier draft of this file read the aggregate (51% → 58%) as rule 4 having failed. That was wrong: the aggregate rose because the short, low-duplication answers stopped folding and left the pool, while every individual category fell. Both rules worked — rule 2 on token count, rule 4 on duplication.
+## What the data supports
 
-What remains is concrete. In `direct-diagnosis`, `docker run -m 1g` and `mem_limit: 1g` are printed once in the summary and again in the procedure below it.
+At 16 cases, 3 trials, `claude-sonnet-5`, blind-graded:
 
-## History
+- Output tokens **−16.4% mean, −36.9% median**.
+- Every quality dimension positive: correctness **+0.208**, fidelity **+0.229**, actionability **+0.583**, safety **+0.188**, concision **+1.063**.
+- Zero blocking findings.
+- The release gate passes on all five rules.
 
-| | Run 1 | Run 2 | Run 3 | Run 4 |
-| --- | ---: | ---: | ---: | ---: |
-| Skill delivery | user turn | system | system | system |
-| Cases | original | original | original | 2 rewritten |
-| Weighted Δ | −0.048 | −0.155 | −0.048 | **+0.101** |
-| Fidelity Δ | +0.167 | −0.125 | −0.250 | −0.125 |
-| Mean tokens Δ | +43.8% | +8.0% | −21.9% | **−23.7%** |
-| Disqualifying blockers | — | 4 | 4 | **1** |
-| Gate rules passed | — | 0/5 | 1/5 | **3/5** |
-
-- **Run 1 → 2** fixed the instrument: the skill is delivered as a system instruction, not concatenated into the user's turn.
-- **Run 2 → 3** changed the skill: the detail no longer restates the summary, short answers skip the scaffolding, and harness-deference is bounded.
-- **Run 3 → 4** fixed two cases that asked for file operations no condition could perform. `destructive-action` went from −0.98 weighted to **+1.33 fidelity** once it was answerable.
-
-Superseded runs are kept under `results/run1-concat/`, `run2-system/`, `run3-slim/` and `run4-fixedcases/`.
-
-## What the data currently supports
-
-Supportable at 16 cases, 3 trials, `claude-sonnet-5`:
-
-- Output tokens down **24% mean, 46% median**.
-- Weighted quality **+0.101** over baseline; actionability **+0.312**, concision **+0.854**, safety **+0.021**.
-- Agent-to-agent output down **51%**.
-
-Not supportable:
-
-- Any claim that omits that the gate reads FAILED.
-- A fidelity claim: it is down 0.125, and that is the open defect.
+Carry the caveats with the numbers: baseline drift, a standard error near 0.090, 34 wins against 11 losses, and one run on one model.
 
 ## Next
 
-1. Clarify that skipping the scaffolding removes structure, not content.
-2. Harden the no-tool-call rule; one trial in three still breaks it.
-3. A command or code block should appear once, not in both the summary and the procedure.
-4. Re-run and publish.
+1. `cost-warning` (−0.30) and `verbatim-error` (−0.25) are the two remaining net-negative cases.
+2. Repeat on `claude-opus-5` before treating any of this as model-independent.
+3. More trials would narrow the interval; three is enough to see an effect this size and not enough to pin it.

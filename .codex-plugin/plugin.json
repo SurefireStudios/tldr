@@ -1,12 +1,21 @@
 {
   "name": "tldr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Too long; didn't read, for Codex. Three-line TL;DR first, full detail folded underneath, parseable blocks for agent-to-agent handoffs.",
-  "author": { "name": "Surefire Studios", "url": "https://github.com/SurefireStudios" },
+  "author": {
+    "name": "Surefire Studios",
+    "url": "https://github.com/SurefireStudios"
+  },
   "homepage": "https://github.com/SurefireStudios/tldr",
   "repository": "https://github.com/SurefireStudios/tldr",
   "license": "MIT",
-  "keywords": ["tldr", "summarization", "output-style", "token-optimization", "codex"],
+  "keywords": [
+    "tldr",
+    "summarization",
+    "output-style",
+    "token-optimization",
+    "codex"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "TL;DR",
@@ -14,7 +23,9 @@
     "longDescription": "Compress agent output without losing it. Every response leads with a three-line TL;DR and keeps the full detail directly below it. Agent-to-agent reports compress to a parseable block so orchestrator context stops filling with narration.",
     "developerName": "Surefire Studios",
     "category": "Productivity",
-    "capabilities": ["Instructions"],
+    "capabilities": [
+      "Instructions"
+    ],
     "websiteURL": "https://github.com/SurefireStudios/tldr",
     "defaultPrompt": [
       "Use tldr for this task.",
