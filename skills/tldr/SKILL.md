@@ -74,6 +74,10 @@ If the whole answer is short — roughly under 150 words — skip the scaffoldin
 
 The shape exists to protect a reader from a wall of text. Where there is no wall, a header, three bullets and a fold cost more than they save, and the reader still has to read all of it. Ceremony is a kind of verbosity.
 
+Skipping the scaffolding removes the header and the fold. **It does not remove content.** The answer still says everything it would have said with the scaffolding around it; what you saved is the structure, not the substance.
+
+If dropping the scaffolding tempts you to also drop a caveat, a warning, a step, or an item from a list, you have misread this rule. Short is a consequence of having nothing left to cut, never a target to hit.
+
 ### What goes in the three lines
 
 In this order, and only these:
@@ -161,6 +165,13 @@ Good: the detail opens "The per-row lookup was added in #412 to fix a null-custo
 
 Keep the detail complete: reasoning, alternatives considered, caveats, and the things you nearly did all belong there. Complete is not the same as expansive. Include what changes the reader's understanding; cut anything that only fills the section out.
 
+This bites hardest on commands and code. **A command, path, or code block appears once.**
+
+- If the TL;DR carries it, the detail refers back to it rather than reprinting it.
+- If the detail needs it inline — a numbered procedure the reader follows with the terminal open — keep it there, and have the TL;DR name the action instead.
+
+So: `raise the container memory limit` on top and `docker run -m 1g` in the step, or the command on top and "after that returns, check the exit code" below. Never both. This is the one place where naming things exactly (rule 3) and not repeating yourself pull against each other, and this is how it resolves.
+
 If the TL;DR already covered everything, there is no detail section. Stop.
 
 ### 5. Compress tool output at the boundary
@@ -240,7 +251,11 @@ Override the defaults when:
 4. **Real ambiguity in the request.** One short clarifying question beats a confidently compressed answer to the wrong question.
 5. **The harness outranks this skill.** Inside an agent harness, the system prompt wins: announce tool calls when required, do the work instead of asking permission for things you were told to do, point time estimates at whoever executes the steps. The constraint wins, the shape stays.
 
-   This applies only to work you can actually carry out. If you have no tools, no file access, or nothing to act on, say so in one line and answer with what you do have. Never emit a tool call you cannot issue: a fragment of tool syntax is worse for the reader than a plain answer, because it looks like progress and is not.
+   This applies only to work you can actually carry out. If you have no tools, no file access, or nothing to act on, say so in one line and answer with what you do have.
+
+   **Never emit tool-call syntax you cannot execute.** A fragment of tool markup is worse than a plain answer: it looks like progress, delivers none, and leaves the reader holding nothing.
+
+   Check the message first. If the material you need is already in front of you — a file pasted in, a log quoted, a command written out — answer from it directly. Reaching for a tool when the answer is already in the conversation is the most common way this rule fails.
 6. **The reader asked for full output.** An explicit request beats every rule here, until they say otherwise.
 
 ## Pre-send check
@@ -253,8 +268,10 @@ Before sending, verify:
 4. **Did the detail get thinner because the TL;DR exists?** If so, put it back.
 5. **Is there a forward reference?** "See below", "as noted", "several things" — replace it with the thing itself.
 6. **Is the first token of the response the TL;DR?** Delete anything above it.
-7. **Is this short enough that the scaffolding is the bulk of it?** Then drop the scaffolding and just answer.
-8. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines, write the file.
+7. **Is this short enough that the scaffolding is the bulk of it?** Then drop the scaffolding and just answer — without dropping anything the answer needed.
+8. **Is there tool-call syntax in this response?** If you could not execute it, delete it and answer from what is in the message.
+9. **Does a command or code block appear twice?** Keep the occurrence the reader will act on; cut the other.
+10. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines, write the file.
 
 Then the real test: **if the reader reads three lines and closes the window, are they correctly informed and unblocked?**
 
