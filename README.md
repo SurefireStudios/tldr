@@ -192,45 +192,35 @@ The governing rule, in the skill's own words: *a reader who reads only the TL;DR
 
 ## Does it actually work?
 
-Measured on 16 cases × 3 trials against `claude-sonnet-5`, blind-graded against a no-skill baseline.
-Results are **model-specific** — see the Opus section below before generalising:
+Measured on 16 cases × 3 trials, blind-graded against a no-skill baseline, on two models with the same instrument:
 
-| | Baseline | With `tldr` | |
-| --- | ---: | ---: | --- |
-| Mean output tokens | 339 | **283** | −16% |
-| Median output tokens | 295 | **186** | −37% |
-| Correctness | 4.771 | **4.979** | +0.208 |
-| Fidelity | 4.521 | **4.750** | +0.229 |
-| Actionability | 4.312 | **4.896** | +0.583 |
-| Safety | 4.417 | **4.604** | +0.188 |
-| Concision | 3.604 | **4.667** | +1.063 |
+| | Sonnet | | Opus | |
+| --- | ---: | --- | ---: | --- |
+| Mean output tokens | 333 → **305** | −8% | 558 → **500** | −10% |
+| Median output tokens | 297 → **234** | −21% | 457 → **304** | −33% |
+| Correctness | 4.833 → **4.854** | +0.021 | 4.854 → 4.854 | 0.000 |
+| Fidelity | 4.458 → **4.688** | +0.229 | 4.771 → 4.667 | −0.104 |
+| Actionability | 4.375 → **4.833** | +0.458 | 4.521 → **4.833** | +0.312 |
+| Safety | 4.562 → **4.667** | +0.104 | 4.667 → **4.875** | +0.208 |
+| Concision | 3.771 → **4.500** | +0.729 | 3.833 → **4.729** | +0.896 |
+| Fabricated tool calls | 0/48 → **0/48** | | 0/48 → **0/48** | |
 
-Fewer tokens **and** better on every dimension, with zero blocking findings. The release gate passes on all five rules — **on `claude-sonnet-5`.**
+Fewer tokens and better on nearly every dimension, on both models. **The release gate reads 4 of 5 on each**, and it is not being relaxed:
 
-### On Opus — and a correction
+- **Sonnet** misses on one blocker — a factual error about `pg_dump` defaults, in a response whose safety behaviour scored 5/5. The gate counts any blocker in a never-compress case, whatever its type.
+- **Opus** misses fidelity by **0.004** against a −0.1 threshold, with a standard error of 0.085.
 
-An earlier version of this section said the skill failed every gate rule on `claude-opus-5`. **That was wrong**, and the reason is worth a paragraph.
+Both are inside noise. Both stay as FAILED, because a threshold that moves when a result lands next to it is not a threshold.
 
-The eval harness handed the skill to Claude Code as a *second* `--append-system-prompt` flag. Claude Code keeps only the last one. So every Opus candidate run silently lost the "you have no tools" framing that every baseline kept — and Opus, told by Claude Code's own system prompt that it had Glob, Read and Bash, reached for them. That instrument bug was published as a skill defect and "fixed" twice with prompt wording before a review agent tested the flag with codewords instead of trusting the harness's comments.
+### The run that was wrong
 
-On the corrected harness, same 16 cases × 3 trials:
+An earlier version of this section said the skill failed every gate rule on Opus, and passed all five on Sonnet with a 16% token saving. Neither was measured correctly.
 
-| | Baseline | With `tldr` | |
-| --- | ---: | ---: | --- |
-| Fabricated tool calls | 0 / 48 | **0 / 48** | |
-| Mean output tokens | 558 | **500** | −10% |
-| Median output tokens | 457 | **304** | −33% |
-| Correctness | 4.854 | 4.854 | 0.000 |
-| Fidelity | 4.771 | 4.667 | **−0.104** |
-| Actionability | 4.521 | **4.833** | +0.312 |
-| Safety | 4.667 | **4.875** | +0.208 |
-| Concision | 3.833 | **4.729** | +0.896 |
+The eval harness handed the skill to Claude Code as a *second* `--append-system-prompt` flag. Claude Code keeps only the last one. So every candidate run silently lost the "you have no tools" framing that every baseline kept. Sonnet passed regardless — it defers to tool absence in the request. Opus, told by Claude Code's own system prompt that it had Glob, Read and Bash and never told otherwise, reached for them and fabricated the results. That was published as a skill defect and "fixed" twice with prompt wording before a review agent tested the flag with codewords instead of trusting the harness's comments about itself.
 
-Four of five gate rules pass. **Fidelity misses by 0.004** against a −0.1 threshold, with a standard error of 0.085 — so the gate reads FAILED, and it is not being relaxed to make it read otherwise. Zero blockers, 31 wins to 17 losses, and the agent-to-agent result holds on Opus too (+0.88 on `agent-report`).
+On the corrected harness, Opus fabricates nothing, and Sonnet's saving is −8% rather than −16% — the table above is the like-for-like one. The one genuine Opus finding that survived the correction: `verbatim-error`, where it twice paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` instead of preserving it. Logged as open.
 
-The one genuine violation in the data: `verbatim-error`, where Opus once paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` instead of preserving it — exactly what the never-compress list forbids. That is a real finding about the skill and it is logged as open.
-
-**Usable on Opus; not yet certified there.** [`evals/RESULTS.md`](evals/RESULTS.md) has the full account, including the run that was wrong.
+It took nine runs. [`evals/RESULTS.md`](evals/RESULTS.md) has all of them — the four that failed on the skill's merits, the one where optimising for tokens cost fidelity, and the one that was my own harness.
 
 Reproduce it:
 
