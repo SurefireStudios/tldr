@@ -218,7 +218,7 @@ An earlier version of this section said the skill failed every gate rule on Opus
 
 The eval harness handed the skill to Claude Code as a *second* `--append-system-prompt` flag. Claude Code keeps only the last one. So every candidate run silently lost the "you have no tools" framing that every baseline kept. Sonnet passed regardless — it defers to tool absence in the request. Opus, told by Claude Code's own system prompt that it had Glob, Read and Bash and never told otherwise, reached for them and fabricated the results. That was published as a skill defect and "fixed" twice with prompt wording before a review agent tested the flag with codewords instead of trusting the harness's comments about itself.
 
-On the corrected harness, Opus fabricates nothing, and Sonnet's saving is −8% rather than −16% — the table above is the like-for-like one. The one genuine Opus finding that survived the correction: `verbatim-error`, where it twice paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` instead of preserving it. Logged as open.
+On the corrected harness, Opus fabricates nothing, and Sonnet's saving is −8% rather than −16% — the table above is the like-for-like one. The one "genuine Opus finding" I kept after the correction — that it paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` — did not survive a second look either: a grep of all 12 responses on that case shows neither model echoes the exact code in either condition. It is the weakest case on both models, logged as open, and not a skill defect.
 
 It took nine runs. [`evals/RESULTS.md`](evals/RESULTS.md) has all of them — the four that failed on the skill's merits, the one where optimising for tokens cost fidelity, and the one that was my own harness.
 

@@ -66,7 +66,7 @@ Fidelity's standard error across the 48 paired rows is 0.085, so the miss is abo
 
 Two things, both real, one of them a defect.
 
-**`verbatim-error` — a genuine never-compress violation.** In 2 of 3 candidate trials Opus paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` instead of preserving it. Judge, trial 3: *"paraphrases the error instead of preserving ERR_PNPM_OUTDATED_LOCKFILE."* The never-compress list says verbatim error text is never compressed; rule 5 says name things exactly. Opus has the rule and does not always follow it. Sonnet did, 3 of 3. Logged as open; not being addressed with more wording, for reasons in the next section.
+**`verbatim-error` — the weakest case, and not a skill defect.** The judge flagged Opus for paraphrasing `ERR_PNPM_OUTDATED_LOCKFILE` in 2 of 3 candidate trials, and an earlier version of this paragraph said Sonnet preserved it 3 of 3. A grep of the responses says otherwise: **none of the 12 responses on this case — both models, both conditions, every trial — contains the exact string.** Both models restate the error in prose whether or not the skill is loaded; the judge simply docked the candidate more often for it. The skill does not cause this and does not fix it. Logged as open on both models; the correction to this paragraph is recorded at the bottom of the file.
 
 **`medical-boundary` — the fidelity dimension doing its job.** Safety scored 5/5 on every candidate trial. The fidelity drop (−1.00) is the judge noting the candidate *"drops risk-factor and sudden-onset red flags"* and *"omits the pressure/squeezing quality"* — tighter than the baseline, still safe, less complete. On a safety case, completeness is the right thing to be penalised for, and this is the concision-vs-fidelity trade made visible rather than hidden.
 
@@ -216,13 +216,19 @@ Between runs 5 and 6 a check was added that retried any response under 20 charac
 At 16 cases, 3 trials, blind-graded, corrected instrument:
 
 - **Sonnet:** gate 4/5. Tokens −8%, every quality dimension positive, zero fabrication. One blocker: a factual error about `pg_dump` defaults in a never-compress case.
-- **Opus:** gate 4/5, fidelity short by 0.004. Tokens −10%, every other dimension up, zero fabrication, zero blockers. One repeatable defect: exact error codes sometimes paraphrased.
+- **Opus:** gate 4/5, fidelity short by 0.004. Tokens −10%, every other dimension up, zero fabrication, zero blockers. Weakest case `verbatim-error`: the exact error code is never echoed — and the baseline never echoes it either (0/12 across both models and both conditions).
 - **Both:** the agent-to-agent block is the strongest result (+1.60 Sonnet, +0.88 Opus).
 
 Not supported: "works on every model." Two models measured, one certified. Nothing has been run on Gemini, GPT, or a local model.
+
+### A third correction: `verbatim-error` was misread
+
+Run 8's write-up said Opus paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` in 2 of 3 candidate trials and that Sonnet preserved it 3 of 3. The second half was wrong. A substring check across `run8-opus-fixed` and `run9-sonnet-fixed` finds the exact code in **0 of 12** responses on that case: not in any Opus or Sonnet trial, baseline or candidate. The judge notes agree once read side by side. The baseline rows say *"never echoes the exact ERR_PNPM_OUTDATED_LOCKFILE code"* just as the candidate rows do; the summary paragraph was written from the candidate-side notes alone.
+
+What changes: it stops being an Opus defect and stops being a skill defect. It is a model habit both conditions share, and the case remains the lowest-fidelity one on both models. What does not change: the gate results (no blocker was raised on it), the token numbers, and the decision not to add wording. Found during the core/reference split review, when a reader agent grepped the responses instead of trusting the summary.
 
 ## Next
 
 1. ~~Re-run Sonnet on the corrected instrument.~~ Done — run 9.
 2. The skill is 18k characters — 2.5× the reference and ~92% of the agentskills.io 5k-token guideline. On harnesses that re-send it every turn, input cost per turn exceeds the measured output saving by roughly 80×. A core/extended split is the next structural change, and the ecosystem's guidance for a plateau is to remove instructions, not add them.
-3. `verbatim-error` on Opus: watch it under the shorter skill before touching wording.
+3. `verbatim-error` on both models: neither condition echoes the exact code (0/12). Watch it under the shorter skill; if the core's item 5 wording moves it, that is the first wording change with a measured effect.

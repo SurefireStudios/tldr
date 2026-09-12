@@ -32,6 +32,14 @@ try {
   const skillPath = path.join(scriptDir, "..", "skills", "tldr", "SKILL.md");
   if (!fs.existsSync(skillPath)) process.exit(0);
 
+  // The skill body links to a sibling reference.md by relative path. The body is
+  // injected as text, so the model has no base directory to resolve that link
+  // against; name the absolute path in the header. Omitted when the file is absent.
+  const referencePath = path.join(scriptDir, "..", "skills", "tldr", "reference.md");
+  const referenceNote = fs.existsSync(referencePath)
+    ? ` The reference.md the rules link to is at ${referencePath}; read it only when a rule points you there.`
+    : "";
+
   // An optional depth value in the flag file overrides the default dial.
   let depth = "3";
   try {
@@ -56,7 +64,7 @@ try {
     "TLDR MODE ACTIVE (always-on). The ruleset below applies to every response. " +
       `${depthNote} ` +
       '"stop tldr" or "normal mode" turns it off for this session; ' +
-      `remove ${flagPath} to stop it loading at startup.\n\n${body}\n`,
+      `remove ${flagPath} to stop it loading at startup.${referenceNote}\n\n${body}\n`,
   );
 } catch {
   // Swallow everything; see the note at the top of this file.

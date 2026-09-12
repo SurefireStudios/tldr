@@ -26,6 +26,14 @@ try {
 
     if (-not (Test-Path -LiteralPath $skillPath)) { exit 0 }
 
+    # The body links to a sibling reference.md by relative path; injected text has
+    # no base directory, so name the absolute path in the header when it exists.
+    $referencePath = [System.IO.Path]::GetFullPath((Join-Path $scriptDir '..\skills\tldr\reference.md'))
+    $referenceNote = ''
+    if (Test-Path -LiteralPath $referencePath) {
+        $referenceNote = " The reference.md the rules link to is at $referencePath; read it only when a rule points you there."
+    }
+
     $depth = (Get-Content -LiteralPath $flagPath -Raw) -replace '\s', ''
     if ($depth -notin @('0', '1', '3', '5')) { $depth = '3' }
 
@@ -40,7 +48,7 @@ try {
     $header = "TLDR MODE ACTIVE (always-on). The ruleset below applies to every response. " +
               "Depth dial is set to $depth. " +
               '"stop tldr" or "normal mode" turns it off for this session; ' +
-              "remove $flagPath to stop it loading at startup."
+              "remove $flagPath to stop it loading at startup." + $referenceNote
 
     Write-Output "$header`n`n$body"
 } catch {
