@@ -387,9 +387,19 @@ def invoke_runner(
     # Deliver the condition's skill the way every supported harness delivers it in
     # production: as a system instruction, above the conversation rather than inside
     # it. See system_flag in runners.example.json for why this is load-bearing.
+    #
+    # JOIN, never append. Claude Code keeps only the LAST --append-system-prompt it
+    # is given. The runner already carries one (the neutral "you have no tools"
+    # framing), so appending the skill as a second flag silently DISCARDED the
+    # framing from every candidate run while the baseline kept it. Every Opus
+    # candidate row in runs 7 and the two follow-up probes was generated without
+    # ever being told it had no tools. Verified with codeword flags on 2.1.239.
     system_flag = spec.get("system_flag")
     if instruction and system_flag:
-        command += [system_flag, instruction]
+        if len(command) >= 2 and command[-2] == system_flag:
+            command[-1] = command[-1] + "\n\n" + instruction
+        else:
+            command += [system_flag, instruction]
 
     command = resolve_executable(command)
     env = {**os.environ, **spec.get("env", {})}
