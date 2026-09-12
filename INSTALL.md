@@ -1,9 +1,12 @@
 # How to install tldr
 
-`tldr` is a single markdown file — [`skills/tldr/SKILL.md`](skills/tldr/SKILL.md) — plus thin adapters for each of the 17 supported agents. There is no runtime and nothing to compile.
+`tldr` is a single markdown file — [`skills/tldr/SKILL.md`](skills/tldr/SKILL.md) — plus thin adapters for each of the 20 supported agents. There is no runtime and nothing to compile.
 
 **Jump to your agent:**
 [Claude Code](#claude-code) ·
+[Cybara](#cybara) ·
+[OpenClaw](#openclaw) ·
+[Hermes](#hermes) ·
 [Cursor](#cursor) ·
 [Codex](#codex) ·
 [Gemini CLI](#gemini-cli) ·
@@ -182,6 +185,135 @@ codex plugin uninstall tldr
 # or, for the manual route:
 rm -rf ~/.codex/skills/tldr
 ```
+
+---
+
+## Cybara
+
+[Cybara](https://cybara.ai) discovers skills from four tiers: bundled, local (`~/.cybara/skills/`), workspace (`<workspace>/.skills/`), and registry.
+
+### Install
+
+```bash
+git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
+mkdir -p ~/.cybara/skills
+cp -r /tmp/tldr/skills/tldr ~/.cybara/skills/tldr
+```
+
+Or as a workspace skill, scoped to one project:
+
+```bash
+mkdir -p .skills && cp -r /tmp/tldr/skills/tldr .skills/tldr
+```
+
+Or through the plugin system, which also gives you enable/disable without restarting the gateway:
+
+```bash
+cybara plugin install /tmp/tldr/skills/tldr
+```
+
+### Verify
+
+```bash
+cybara plugin list
+```
+
+The skill also appears under Settings → Plugins in the web UI.
+
+### Uninstall
+
+```bash
+cybara plugin disable tldr     # keep it installed, turn it off
+rm -rf ~/.cybara/skills/tldr   # or remove it outright
+```
+
+### Note
+
+Cybara reads `metadata.cybara` for eligibility gating — OS, required binaries, required
+env vars. `tldr` declares no requirements, because it is markdown with no runtime, so it
+is eligible everywhere and never hidden from the agent.
+
+---
+
+## OpenClaw
+
+[OpenClaw](https://docs.openclaw.ai) installs skills at several scopes. Global is usually what you want.
+
+### Install
+
+```bash
+openclaw skills install git:SurefireStudios/tldr@main --global
+```
+
+From a local clone instead:
+
+```bash
+git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
+openclaw skills install /tmp/tldr/skills/tldr --as tldr --global
+```
+
+Scopes, if you want something narrower than global:
+
+| Scope | Path |
+| --- | --- |
+| Global | `~/.openclaw/skills` |
+| Personal agent | `~/.agents/skills` |
+| Project agent | `<workspace>/.agents/skills` |
+| Workspace | `<workspace>/skills` |
+
+### Verify
+
+Type `/tldr`. The skill sets `user-invocable: true`, which is what makes it a slash command,
+and `disable-model-invocation: true`, which stops the model reaching for it unprompted.
+
+### Update
+
+```bash
+openclaw skills update @SurefireStudios/tldr --global
+```
+
+### Uninstall
+
+```bash
+rm -rf ~/.openclaw/skills/tldr
+```
+
+---
+
+## Hermes
+
+[Hermes Agent](https://hermes-agent.nousresearch.com) follows the [agentskills.io](https://agentskills.io)
+open standard, so the same folder works without modification.
+
+### Install
+
+```bash
+git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
+mkdir -p ~/.hermes/skills
+cp -r /tmp/tldr/skills/tldr ~/.hermes/skills/tldr
+```
+
+On native Windows the config directory is `%LOCALAPPDATA%\hermes` instead of `~/.hermes`.
+WSL2 installs use `~/.hermes` as on Linux.
+
+### Verify
+
+```text
+/skills        # browse what is installed
+/tldr          # invoke it
+```
+
+### Uninstall
+
+```bash
+rm -rf ~/.hermes/skills/tldr
+```
+
+### Note
+
+Hermes writes its own skills and improves them during use. `tldr` is a fixed contract rather
+than a learned one, so if you want Hermes to leave it alone, keep it out of any directory
+Hermes treats as its own authoring space.
 
 ---
 

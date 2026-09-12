@@ -17,7 +17,7 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/github/license/SurefireStudios/tldr?style=flat-square" alt="License: MIT"></a>
   <a href="https://github.com/SurefireStudios/tldr/stargazers"><img src="https://img.shields.io/github/stars/SurefireStudios/tldr?style=flat-square" alt="Stars"></a>
-  <a href="INSTALL.md"><img src="https://img.shields.io/badge/agents-17%20supported-blue?style=flat-square" alt="17 agents supported"></a>
+  <a href="INSTALL.md"><img src="https://img.shields.io/badge/agents-20%20supported-blue?style=flat-square" alt="20 agents supported"></a>
   <a href="evals/"><img src="https://img.shields.io/badge/evals-reproducible-green?style=flat-square" alt="Reproducible evals"></a>
 </p>
 
@@ -34,7 +34,7 @@
 
 ## Install
 
-Paste this into your agent. It works in Claude Code, Cursor, Codex, Gemini CLI, and the 17 agents in the table below.
+Paste this into your agent. It works in Claude Code, Cursor, Codex, Gemini CLI, and the 20 agents in the table below.
 
 ```text
 Install the tldr skill from https://github.com/SurefireStudios/tldr — read the repo's AGENTS.md for instructions.
@@ -244,6 +244,9 @@ The harness measures **tokens and fidelity together**, and the gate fails a cand
 | --- | --- | --- |
 | **Claude Code** | `claude plugin marketplace add SurefireStudios/tldr` | ✅ hook |
 | **Cursor** | [copy the skill](INSTALL.md#cursor) | ✅ rules |
+| **Cybara** | `cybara plugin install` | ✅ plugin |
+| **OpenClaw** | `openclaw skills install git:SurefireStudios/tldr@main` | ✅ global scope |
+| **Hermes** | [agentskills.io standard](INSTALL.md#hermes) | ✅ |
 | **Codex** | [plugin](INSTALL.md#codex) | ✅ hook |
 | **Gemini CLI** | [extension](INSTALL.md#gemini-cli) | ✅ context file |
 | **GitHub Copilot** | [VS Code + CLI](INSTALL.md#github-copilot) | ✅ instructions |

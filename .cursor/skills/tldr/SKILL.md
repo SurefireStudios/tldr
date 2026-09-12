@@ -2,10 +2,14 @@
 name: tldr
 description: "Compress output without losing it: lead with a three-line TL;DR, keep the full detail directly underneath, and compress agent-to-agent reports to a parseable block. Demote, don't delete. Invoke with /tldr, compress one thing with '/tldr <target>', turn off with 'stop tldr'."
 disable-model-invocation: true
+user-invocable: true
 license: MIT
+homepage: https://github.com/SurefireStudios/tldr
 metadata:
   tags: "TLDR, Summarization, Output Style, Context Engineering, Token Optimization"
   category: "productivity"
+  openclaw: { "emoji": "📄" }
+  cybara: { "homepage": "https://github.com/SurefireStudios/tldr" }
 ---
 
 # tldr

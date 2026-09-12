@@ -55,6 +55,9 @@ Each harness has one file worth opening first:
 | OMP | `package.json` (`omp`), `extensions/tldr.ts` |
 | OpenCode | `opencode.json`, `.opencode/plugins/tldr.mjs`, `.opencode/command/tldr.md` |
 | Gemini CLI | `gemini-extension.json`, `GEMINI.md`, `skills/tldr/agents/gemini.toml` |
+| Cybara | `skills/tldr/SKILL.md` plus `metadata.cybara` in its frontmatter |
+| OpenClaw | `skills/tldr/SKILL.md`; `user-invocable` is what makes `/tldr` exist |
+| Hermes | `skills/tldr/SKILL.md` — agentskills.io standard, no adapter needed |
 | Qwen, Kimi | The corresponding manifest above |
 | Everything else | `INSTALL.md`, then `skills/tldr/SKILL.md` |
 
