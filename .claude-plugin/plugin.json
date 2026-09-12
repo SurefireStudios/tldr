@@ -1,6 +1,6 @@
 {
   "name": "tldr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Too long; didn't read, for Claude Code. Lead every response with a three-line TL;DR and fold the full detail underneath. Demote, don't delete.",
   "author": {
     "name": "Surefire Studios",

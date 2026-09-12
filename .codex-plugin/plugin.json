@@ -1,6 +1,6 @@
 {
   "name": "tldr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Too long; didn't read, for Codex. Three-line TL;DR first, full detail folded underneath, parseable blocks for agent-to-agent handoffs.",
   "author": {
     "name": "Surefire Studios",

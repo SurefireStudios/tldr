@@ -11,6 +11,8 @@ release.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-12
+
 ### Skill
 
 - **Split into a core and a reference.** `skills/tldr/SKILL.md` is now under
@@ -44,6 +46,11 @@ release.
 
 ### Evals
 
+- Runs 10–13 measure the split on both models. Core v1 held on Sonnet and
+  thinned Opus's detail (fidelity −0.167); core v2 restored two sentences and
+  passes the gate 5 of 5 on both — the first Opus pass. Agent-to-agent output
+  −37% (Sonnet) / −59% (Opus); human-facing output shorter on the median,
+  longer on the mean where the skill keeps caveats above the fold.
 - Resumption is skill-aware: a candidate row is only reused for the exact skill
   text that produced it. Previously, rerunning after editing the skill would
   have skipped every candidate row and reported the old numbers.

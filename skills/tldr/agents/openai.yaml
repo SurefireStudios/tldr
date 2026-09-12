@@ -2,7 +2,7 @@ name: tldr
 description: >-
   Lead with a three-line TL;DR and fold the full detail underneath.
   Demote, don't delete.
-version: 0.1.0
+version: 0.3.0
 license: MIT
 homepage: https://github.com/SurefireStudios/tldr
 

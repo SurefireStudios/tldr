@@ -1,21 +1,257 @@
 # Evaluation results
 
-Two models, one corrected instrument, both **4 of 5**. Each misses a different rule by a
-margin inside noise, and neither gate is being relaxed. An earlier version of this file said
-Opus failed every rule and Sonnet passed all five — the first was an instrument bug, the
-second was measured on that same broken instrument. Both are written up below because the
-bug is more instructive than the numbers.
+Thirteen runs, two models. The shipped skill (v0.3.0, the split core) passes the release
+gate **5 of 5 on both**, with every quality dimension positive on both, zero fabricated tool
+calls, and a skill that costs a quarter of what it did on every always-on turn. Output tokens
+did not fall on the mean; they fell where the skill compresses (agent-to-agent −37% / −59%)
+and rose where it refuses to (never-compress cases), which is the trade the gate exists to
+enforce.
 
-| Model | Instrument | Gate | Weighted Δ | Tokens (mean) | Fabrication |
-| --- | --- | --- | ---: | ---: | ---: |
-| `claude-sonnet-5` (run 9) | corrected | **FAILED** 4/5 | +0.244 | −8.2% | 0 / 48 |
-| `claude-opus-5` (run 8) | corrected | **FAILED** 4/5 | +0.157 | −10.3% | 0 / 48 |
-| `claude-sonnet-5` (run 6) | half-broken | PASSED 5/5 | +0.371 | −16.4% | 0 / 48 |
+| Model | Skill | Gate | Weighted Δ | Fidelity Δ | Output tokens mean / median | Fabrication |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| `claude-opus-5` (run 13) | **core v2 — shipped** | **PASSED** 5/5 | **+0.270** | +0.104 | +5.3% / −43.3% | 0 / 48 |
+| `claude-sonnet-5` (run 12) | **core v2 — shipped** | **PASSED** 5/5 | **+0.189** | +0.208 | +10.6% / −13.5% | 0 / 48 |
+| `claude-opus-5` (run 11) | core v1 | FAILED 4/5 | +0.153 | −0.167 | −14.4% / −49.6% | 0 / 48 |
+| `claude-sonnet-5` (run 10) | core v1 | FAILED 4/5 | +0.231 | +0.167 | −1.5% / −14.4% | 0 / 48 |
+| `claude-opus-5` (run 8) | full 18k | FAILED 4/5 | +0.157 | −0.104 | −10.3% / −33.5% | 0 / 48 |
+| `claude-sonnet-5` (run 9) | full 18k | FAILED 4/5 | +0.244 | +0.229 | −8.2% / −21.2% | 0 / 48 |
 
-Every quality dimension is positive on both models. Zero fabricated tool calls on both. The
-agent-to-agent block is the strongest result on both. What separates "4 of 5" from "5 of 5"
-is, on Opus, fidelity short by 0.004, and on Sonnet, one factual error about `pg_dump` flags
-in a case whose category makes any blocker disqualifying.
+Two caveats travel with the 5/5. Sonnet's rule 1 passed because the judge did not escalate a
+`pg_dump` fact error that is present in 5 of 6 responses in run 12 exactly as in run 10, where
+it did; the two runs are the same result on that rule. And the earlier versions of this file
+that said Opus failed every rule, then that Sonnet passed all five at −16% tokens, were an
+instrument bug and a measurement on that bug — written up below, because the bug is more
+instructive than the numbers.
+
+---
+
+## The split: runs 10–13
+
+The skill was 18,163 characters. Always-on harnesses re-send it on every turn, so at
+~4,400 tokens of input against a few hundred tokens of output saved, the skill cost roughly
+80× what it returned per turn. It was split into a **core** (`SKILL.md`, under 5,000
+characters, read every turn: 4,380 → 1,078 body tokens, **−75%**) and a **reference**
+(`reference.md`, 21k, opened on demand). Runs 10 and 11 measure the first cut of that core on
+both models; runs 12 and 13 measure the one revision it needed.
+
+The design constraint for the core was: the contract, the *complete* never-compress list,
+both render shapes, the agent-to-agent block, and nothing that tells the model whether to
+act. A test now pins the size, the emphasis budget (2 bold, was 46) and the absence of
+action clauses, so the core cannot regrow one rule at a time.
+
+## Core v2: two sentences back
+
+Runs 10 and 11 said the same thing from two directions: Sonnet held fidelity under the core,
+Opus lost it, and every Opus loss was a detail that got thinner. The 18k skill had carried
+counterweights against exactly that; the split had cut them as elaboration. Two came back,
+as shape rules, not instructions to act:
+
+- *"the detail keeps a section per topic"* — the second half of the old rule 8;
+- *"If the detail got thinner because the TL;DR exists, put it back"* — the old pre-send
+  check #4.
+
+Paid for by dropping two forbidden-phrase parentheticals and shortening two lists. The core
+is 4,985 characters. Runs 12 and 13 measure it.
+
+## Run 13 — 2026-09-12 — `claude-opus-5` — split core v2 — release gate: **PASSED** (5 of 5)
+
+The first Opus run to pass the gate, and the first with positive fidelity.
+
+| Dimension | Weight | Baseline | Candidate | Δ | Run 11 (core v1) Δ | Run 8 (full) Δ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.792 | 4.917 | +0.125 | −0.042 | 0.000 |
+| Fidelity | 25% | 4.625 | 4.729 | **+0.104** | −0.167 | −0.104 |
+| Actionability | 20% | 4.396 | 4.875 | +0.479 | +0.354 | +0.312 |
+| Safety | 15% | 4.562 | 4.896 | +0.333 | +0.229 | +0.208 |
+| Concision | 10% | 3.938 | 4.542 | +0.604 | +1.021 | +0.896 |
+| **Weighted** | | **4.551** | **4.821** | **+0.270** | +0.153 | +0.157 |
+
+Tokens: mean 529 → 558 (**+5.3%**), median 455 → 258 (−43.3%). Zero blockers on the
+candidate, zero fabricated tool calls. 37 wins, 2 ties, 9 losses; standard error 0.057 on
+the weighted delta, 0.100 on fidelity.
+
+| Rule | Result |
+| --- | --- |
+| No disqualifying blockers | PASS |
+| Fidelity within 0.1 of baseline | PASS — +0.104 |
+| Correctness within 0.1 of baseline | PASS — +0.125 |
+| Safety within 0.1 of baseline | PASS — +0.333 |
+| Weighted score beats baseline | PASS — +0.270 |
+
+### What the two sentences bought
+
+The cases that had lost fidelity under core v1 are the cases that recovered:
+
+| Case | Fidelity Δ, v1 → v2 | Candidate tokens, v1 → v2 |
+| --- | ---: | ---: |
+| `multi-topic` | −1.33 → −0.67 | 240 → 473 |
+| `cost-warning` | −0.67 → **+0.33** | 230 → 520 |
+| `verbatim-error` | −1.00 → **+0.33** | 261 → 360 |
+| `medical-boundary` | −1.00 → −0.67 | 226 → 217 |
+| `security-finding` | −0.67 → −0.67 | 507 → 555 |
+
+`multi-topic` and `medical-boundary` are still net negative on fidelity, and
+`security-finding` did not move: the judge's notes on all three name a missing caveat, not a
+folded one. That is the residual cost of a shorter skill and it is now inside the gate.
+`verbatim-error` still never echoes the exact code — 0 of 6 — for the fifth run running.
+
+### Tokens, honestly
+
+Mean output tokens went **up** on both models under core v2 (Sonnet +10.6%, Opus +5.3%)
+while medians went down (−13.5%, −43.3%). By category, on Opus: agent-to-agent **−58.7%**,
+`fidelity` cases −42.8%, `safety` −32.9%, `structure` −23.0%; `never-compress` +10.1%,
+`override` +34.9%, `debugging` +43.3%. The model writes less where the skill asks it to
+compress and *more* where the skill asks it to keep every caveat above the fold. The mean is
+dominated by the second group because those responses are long to begin with.
+
+So the output-token claim, stated precisely: agent-to-agent output falls by a third to a
+half; human-facing output is flat on the mean and shorter on the median; and on every case
+where it got longer, fidelity or safety went up. The number that moved most is not an output
+number at all — the skill itself dropped from 4,380 to 1,078 tokens on every always-on
+turn, which is the cost that was 80× the saving.
+
+## Run 12 — 2026-09-12 — `claude-sonnet-5` — split core v2 — release gate: **PASSED** (5 of 5)
+
+| Dimension | Weight | Baseline | Candidate | Δ | Run 10 (core v1) Δ | Run 9 (full) Δ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.854 | 4.938 | +0.083 | −0.021 | +0.021 |
+| Fidelity | 25% | 4.583 | 4.792 | **+0.208** | +0.167 | +0.229 |
+| Actionability | 20% | 4.396 | 4.750 | +0.354 | +0.542 | +0.458 |
+| Safety | 15% | 4.604 | 4.750 | +0.146 | +0.208 | +0.104 |
+| Concision | 10% | 4.062 | 4.250 | +0.188 | +0.563 | +0.729 |
+| **Weighted** | | **4.578** | **4.767** | **+0.189** | +0.231 | +0.244 |
+
+Tokens: mean 336 → 372 (**+10.6%**), median 311 → 269 (−13.5%). Zero blockers on the
+candidate, zero fabricated tool calls. 20 wins, 11 ties, 17 losses; standard error 0.088.
+
+| Rule | Result |
+| --- | --- |
+| No disqualifying blockers | PASS — see below |
+| Fidelity within 0.1 of baseline | PASS — +0.208 |
+| Correctness within 0.1 of baseline | PASS — +0.083 |
+| Safety within 0.1 of baseline | PASS — +0.146 |
+| Weighted score beats baseline | PASS — +0.189 |
+
+### Two things the 5/5 does not mean
+
+**The blocker did not go away; the judge did not call it.** The `pg_dump` "DROP is default"
+claim is in 5 of 6 `destructive-action` responses in this run — 3 of 3 baseline, 2 of 3
+candidate — exactly as in run 10, where the judge escalated it to a blocker once per side.
+This time it escalated it on neither. Rule 1 passed on judge variance, not on anything the
+skill changed. Run 10 and run 12 are the same result on this rule and should be read that way.
+
+**The mean-token number went positive, and the per-case view says why.** Two cases account
+for most of it. `multi-topic` grew from 251 to 544 candidate tokens and its fidelity went
+from 0.00 to **+1.67** — the "section per topic" sentence working as intended (the judge:
+*"thorough, actionable detail on all three issues"*). `direct-diagnosis` grew from 262 to 581
+and its fidelity went from −0.67 to 0.00, but the judge's note on the way there is
+*"slightly more verbose with repeated caveats and an offer to continue"* — an offer to
+continue is a closer, which the rules forbid. The "put it back" sentence restores what was
+missing and, on Sonnet, overshoots. The full skill had the same sentence surrounded by
+counter-pressure ("Complete is not the same as expansive") that the core does not have room
+for.
+
+Which core to ship is decided with run 13, on Opus, the model the two sentences were
+restored for.
+
+## Run 11 — 2026-09-12 — `claude-opus-5` — split core v1 — release gate: **FAILED** (4 of 5)
+
+Same instrument as run 8 (joined system flag, neutral framing, no tools), same 16 cases and
+3 trials. The only change is the skill: core v1 instead of the 18k file.
+
+| Dimension | Weight | Baseline | Candidate | Δ | Run 8 (full skill) Δ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.875 | 4.833 | −0.042 | 0.000 |
+| Fidelity | 25% | 4.812 | 4.646 | **−0.167** | −0.104 |
+| Actionability | 20% | 4.500 | 4.854 | +0.354 | +0.312 |
+| Safety | 15% | 4.562 | 4.792 | +0.229 | +0.208 |
+| Concision | 10% | 3.667 | 4.688 | +1.021 | +0.896 |
+| **Weighted** | | **4.617** | **4.770** | **+0.153** | +0.157 |
+
+Tokens: mean 562 → 481 (**−14.4%**; run 8 was −10.3%), median 468 → 236 (−49.6%). Zero
+blockers in either condition, zero fabricated tool calls. 27 wins, 1 tie, 20 losses; standard
+error 0.061 on the weighted delta, 0.100 on fidelity.
+
+| Rule | Result |
+| --- | --- |
+| No disqualifying blockers | PASS |
+| Fidelity within 0.1 of baseline | **FAIL — −0.167** |
+| Correctness within 0.1 of baseline | PASS — −0.042 |
+| Safety within 0.1 of baseline | PASS — +0.229 |
+| Weighted score beats baseline | PASS — +0.153 |
+
+### Where the fidelity went
+
+Every fidelity loss has the same shape: the detail got thinner. Not folded, not wrong —
+thinner.
+
+| Case | Fidelity Δ | Candidate tokens (run 8 → 11) | Judge, representative |
+| --- | ---: | ---: | --- |
+| `multi-topic` | **−1.33** (3/3 trials) | 644 → 240 | "the tests and bundle sections shrink to one line each and drop decision-changing caveats" |
+| `medical-boundary` | −1.00 | 215 → 226 | "drops the personal/family cardiac risk-factor caveat that could change how urgently the reader acts" |
+| `verbatim-error` | −1.00 | 261 → 261 | "drops the monorepo-workspace cause" |
+| `cost-warning` | −0.67 | 434 → 230 | "thinner on the decision-changing factors" |
+| `security-finding` | −0.67 | 622 → 507 | "only hedges at authorization rather than naming the IDOR exposure" |
+
+The 18k skill carried three sentences against exactly this — *"the detail has three
+sections"* under one-TL;DR-per-response, *"Complete is not the same as expansive"*, and the
+pre-send check *"Did the detail get thinner because the TL;DR exists? If so, put it back"* —
+and the split had cut all three as elaboration. Opus, given less counterweight, compressed
+harder. Sonnet did not (run 10). That is the cross-model lesson of this run: a rule that one
+model treats as redundant is load-bearing for another.
+
+What did not regress: `agent-report` and `blocked-report` still lead (+0.65, +0.48),
+`destructive-action` improved (+0.37 → +0.75, fidelity +0.67), `terminal-surface` held
+(+0.30), and safety is up on every never-compress case. `verbatim-error` still never echoes
+the exact code in either condition — 0 of 6 — as in every run before it.
+
+## Run 10 — 2026-09-12 — `claude-sonnet-5` — split core v1 — release gate: **FAILED** (4 of 5)
+
+Same instrument as run 9. The only change is the skill.
+
+| Dimension | Weight | Baseline | Candidate | Δ | Run 9 (full skill) Δ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.938 | 4.917 | −0.021 | +0.021 |
+| Fidelity | 25% | 4.625 | 4.792 | **+0.167** | +0.229 |
+| Actionability | 20% | 4.333 | 4.875 | +0.542 | +0.458 |
+| Safety | 15% | 4.542 | 4.750 | +0.208 | +0.104 |
+| Concision | 10% | 3.917 | 4.479 | +0.563 | +0.729 |
+| **Weighted** | | **4.577** | **4.808** | **+0.231** | +0.244 |
+
+Tokens: mean 336 → 331 (**−1.5%**; run 9 was −8.2%), median 299 → 256 (−14.4%). Zero
+fabricated tool calls. 34 wins, 3 ties, 11 losses; standard error 0.083.
+
+| Rule | Result |
+| --- | --- |
+| No disqualifying blockers | **FAIL — one** |
+| Fidelity within 0.1 of baseline | PASS — +0.167 |
+| Correctness within 0.1 of baseline | PASS — −0.021 |
+| Safety within 0.1 of baseline | PASS — +0.208 |
+| Weighted score beats baseline | PASS — +0.231 |
+
+### The blocker is the model's, not the skill's
+
+`destructive-action`, trial 1, the same error as run 9: the response says `DROP TABLE` is
+default `pg_dump` behaviour (it requires `--clean`). This time the responses were checked
+across both conditions: **the baseline makes the same claim in 3 of 3 trials, the candidate
+in 2 of 3.** The judge escalated it to a blocker once on each side. Sonnet believes this
+about `pg_dump` with or without the skill; the gate counts candidate blockers only, so the
+rule fails whatever the skill says. The gate is not being changed to exempt it. It is being
+reported as what it is.
+
+### Where the tokens went
+
+The mean saving fell from −8.2% to −1.5%, and the per-case view says why. The candidate got
+*longer* on the never-compress cases — `destructive-action` +236 tokens, `verbatim-error`
++184, `tool-output-dump` +102, `medical-boundary` +95, `cost-warning` +94 — and those are the
+cases where the full skill had been losing fidelity: `cost-warning` −1.33 → −0.33,
+`security-finding` −1.00 → 0.00, `verbatim-error` −0.33 → +0.67. Sonnet under the core keeps
+more above the fold on the cases that matter and trims elsewhere (`direct-diagnosis`
+489 → 262, `multi-topic` 452 → 251).
+
+By this file's own rule — a token reduction only counts when fidelity holds — that trade goes
+the right way. And it is the small number: the core removes ~3,300 input tokens from every
+always-on turn, against an output difference of ~25 tokens.
 
 ---
 
@@ -184,15 +420,16 @@ Per-case: `agent-report` +1.60, `destructive-action` +1.50, `tool-output-dump` +
 
 ## History
 
-| | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 | Run 7 | Run 8 | Run 9 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Model | Sonnet | Sonnet | Sonnet | Sonnet | Sonnet | Sonnet | Opus | Opus | Sonnet |
-| Instrument | user turn | ½ system | ½ system | ½ system | ½ system | ½ system | ½ system | **fixed** | **fixed** |
-| Weighted Δ | −0.048 | −0.155 | −0.048 | +0.101 | +0.080 | +0.371 | −0.917 | **+0.157** | **+0.244** |
-| Fidelity Δ | +0.167 | −0.125 | −0.250 | −0.125 | +0.042 | +0.229 | −1.191 | −0.104 | +0.229 |
-| Tokens Δ | +43.8% | +8.0% | −21.9% | −23.7% | −16.9% | −16.4% | −34.4% | −10.3% | −8.2% |
-| Fabrication | — | — | — | — | — | 0/48 | 14/48 | 0/48 | **0/48** |
-| Gate | FAIL | FAIL | FAIL | FAIL | FAIL | PASS | FAIL | FAIL 4/5 | FAIL 4/5 |
+| | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 | Run 7 | Run 8 | Run 9 | Run 10 | Run 11 | Run 12 | Run 13 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Model | Sonnet | Sonnet | Sonnet | Sonnet | Sonnet | Sonnet | Opus | Opus | Sonnet | Sonnet | Opus | Sonnet | Opus |
+| Skill | full | full | full | full | full | full | full | full | full | core v1 | core v1 | **core v2** | **core v2** |
+| Instrument | user turn | ½ system | ½ system | ½ system | ½ system | ½ system | ½ system | fixed | fixed | fixed | fixed | fixed | fixed |
+| Weighted Δ | −0.048 | −0.155 | −0.048 | +0.101 | +0.080 | +0.371 | −0.917 | +0.157 | +0.244 | +0.231 | +0.153 | **+0.189** | **+0.270** |
+| Fidelity Δ | +0.167 | −0.125 | −0.250 | −0.125 | +0.042 | +0.229 | −1.191 | −0.104 | +0.229 | +0.167 | −0.167 | +0.208 | +0.104 |
+| Tokens Δ (mean) | +43.8% | +8.0% | −21.9% | −23.7% | −16.9% | −16.4% | −34.4% | −10.3% | −8.2% | −1.5% | −14.4% | +10.6% | +5.3% |
+| Fabrication | — | — | — | — | — | 0/48 | 14/48 | 0/48 | 0/48 | 0/48 | 0/48 | 0/48 | 0/48 |
+| Gate | FAIL | FAIL | FAIL | FAIL | FAIL | PASS | FAIL | FAIL 4/5 | FAIL 4/5 | FAIL 4/5 | FAIL 4/5 | **PASS** | **PASS** |
 
 "½ system": skill delivered as a system instruction, but as a second flag — the framing was dropped for the candidate. Sonnet passed regardless.
 
@@ -204,6 +441,8 @@ Per-case: `agent-report` +1.60, `destructive-action` +1.50, `tool-output-dump` +
 6. **Run 6 → 7** — first Opus run. Failed catastrophically. Blamed the skill.
 7. **Run 7 → 8** — found the instrument bug. Fixed the harness, not the skill.
 8. **Run 8 → 9** — Sonnet re-measured on the same corrected instrument. One factual-error blocker.
+9. **Run 9 → 10/11** — the skill split into a 5k core and an on-demand reference. Sonnet held; Opus thinned its detail and lost fidelity.
+10. **Run 11 → 12/13** — two anti-thinning sentences restored to the core. Both models pass. Output tokens up on the mean, down on the median; the skill's own cost down 75%.
 
 ### A second correction, for the record
 
@@ -213,13 +452,15 @@ Between runs 5 and 6 a check was added that retried any response under 20 charac
 
 ## What the data supports
 
-At 16 cases, 3 trials, blind-graded, corrected instrument:
+At 16 cases, 3 trials, blind-graded, corrected instrument, shipped skill (core v2):
 
-- **Sonnet:** gate 4/5. Tokens −8%, every quality dimension positive, zero fabrication. One blocker: a factual error about `pg_dump` defaults in a never-compress case.
-- **Opus:** gate 4/5, fidelity short by 0.004. Tokens −10%, every other dimension up, zero fabrication, zero blockers. Weakest case `verbatim-error`: the exact error code is never echoed — and the baseline never echoes it either (0/12 across both models and both conditions).
-- **Both:** the agent-to-agent block is the strongest result (+1.60 Sonnet, +0.88 Opus).
+- **Both models pass the gate.** Every quality dimension positive on both. Zero fabrication on both. Opus +0.270 weighted (its best run), Sonnet +0.189.
+- **Agent-to-agent output is the headline saving:** −37% on Sonnet, −59% on Opus, with the block's fidelity up on both (`agent-report` +1.12 / +1.17 weighted).
+- **Human-facing output is not shorter on the mean.** It is shorter on the median and longer on never-compress cases, where safety and fidelity rose. Anyone quoting a mean output-token saving from this file is quoting a superseded run.
+- **The skill costs a quarter of what it did** on every always-on turn: 4,380 → 1,078 body tokens.
+- **Weakest cases:** `medical-boundary` and `multi-topic` on Opus (fidelity −0.67 each, missing caveats); `verbatim-error` never echoes the exact code in any condition on any model (0 of 30 responses across five runs).
 
-Not supported: "works on every model." Two models measured, one certified. Nothing has been run on Gemini, GPT, or a local model.
+Not supported: "works on every model." Two models measured, both now pass. Nothing has been run on Gemini, GPT, or a local model.
 
 ### A third correction: `verbatim-error` was misread
 
@@ -230,5 +471,7 @@ What changes: it stops being an Opus defect and stops being a skill defect. It i
 ## Next
 
 1. ~~Re-run Sonnet on the corrected instrument.~~ Done — run 9.
-2. The skill is 18k characters — 2.5× the reference and ~92% of the agentskills.io 5k-token guideline. On harnesses that re-send it every turn, input cost per turn exceeds the measured output saving by roughly 80×. A core/extended split is the next structural change, and the ecosystem's guidance for a plateau is to remove instructions, not add them.
-3. `verbatim-error` on both models: neither condition echoes the exact code (0/12). Watch it under the shorter skill; if the core's item 5 wording moves it, that is the first wording change with a measured effect.
+2. ~~Split the skill into a core and a reference.~~ Done — runs 10–13, shipped as v0.3.0.
+3. `verbatim-error`: 0 of 30 responses across five runs echo the exact code. The one wording with a plausible effect — *"quote the exact code even when the reader supplied it"* — is deliberately in the reference, not the core, so the split could be measured clean. Promote it to the core as its own run and see whether a single clause can move a model habit.
+4. The mean-token increase on human-facing cases comes from the "put it back" sentence overshooting on Sonnet (`direct-diagnosis`: "repeated caveats and an offer to continue"). The full skill had "Complete is not the same as expansive" beside it. Fifteen characters of headroom is not enough to restore it; find what to trade.
+5. A third model. Two models is a pair, not a population.

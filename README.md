@@ -192,25 +192,28 @@ The governing rule, in the skill's own words: *a reader who reads only the TL;DR
 
 ## Does it actually work?
 
-Measured on 16 cases × 3 trials, blind-graded against a no-skill baseline, on two models with the same instrument:
+Measured on 16 cases × 3 trials, blind-graded against a no-skill baseline, on two models with the same instrument. This is the shipped skill (v0.3.0):
 
 | | Sonnet | | Opus | |
 | --- | ---: | --- | ---: | --- |
-| Mean output tokens | 333 → **305** | −8% | 558 → **500** | −10% |
-| Median output tokens | 297 → **234** | −21% | 457 → **304** | −33% |
-| Correctness | 4.833 → **4.854** | +0.021 | 4.854 → 4.854 | 0.000 |
-| Fidelity | 4.458 → **4.688** | +0.229 | 4.771 → 4.667 | −0.104 |
-| Actionability | 4.375 → **4.833** | +0.458 | 4.521 → **4.833** | +0.312 |
-| Safety | 4.562 → **4.667** | +0.104 | 4.667 → **4.875** | +0.208 |
-| Concision | 3.771 → **4.500** | +0.729 | 3.833 → **4.729** | +0.896 |
+| Correctness | 4.854 → **4.938** | +0.083 | 4.792 → **4.917** | +0.125 |
+| Fidelity | 4.583 → **4.792** | +0.208 | 4.625 → **4.729** | +0.104 |
+| Actionability | 4.396 → **4.750** | +0.354 | 4.396 → **4.875** | +0.479 |
+| Safety | 4.604 → **4.750** | +0.146 | 4.562 → **4.896** | +0.333 |
+| Concision | 4.062 → **4.250** | +0.188 | 3.938 → **4.542** | +0.604 |
 | Fabricated tool calls | 0/48 → **0/48** | | 0/48 → **0/48** | |
+| Agent-to-agent output tokens | 194 → **122** | −37% | 337 → **139** | −59% |
+| Human-facing output tokens, median | 311 → **269** | −13% | 455 → **258** | −43% |
+| Human-facing output tokens, mean | 336 → 372 | +11% | 529 → 558 | +5% |
+| Skill tokens per always-on turn | 4,380 → **1,078** | −75% | 4,380 → **1,078** | −75% |
 
-Fewer tokens and better on nearly every dimension, on both models. **The release gate reads 4 of 5 on each**, and it is not being relaxed:
+Better on every dimension, on both models, and **the release gate passes 5 of 5 on both.** Read the token rows carefully, because they are not the story a compression skill is expected to tell:
 
-- **Sonnet** misses on one blocker — a factual error about `pg_dump` defaults, in a response whose safety behaviour scored 5/5. The gate counts any blocker in a never-compress case, whatever its type.
-- **Opus** misses fidelity by **0.004** against a −0.1 threshold, with a standard error of 0.085.
+- **Where the skill compresses — agent-to-agent reports — output falls by a third to a half.** That is the headline feature and it is where the saving lives.
+- **Where the skill refuses to compress — destructive actions, security findings, cost, errors — output gets longer**, because the model now keeps every caveat above the fold instead of thinning it. Those cases are why the human-facing *mean* went up while the *median* went down. Every one of them scored higher on fidelity or safety.
+- **The biggest number is the skill's own size.** An always-on harness re-sends the skill on every turn; the old 18k version cost roughly 80× per turn what it saved in output. The core is a quarter of that.
 
-Both are inside noise. Both stay as FAILED, because a threshold that moves when a result lands next to it is not a threshold.
+The gate result carries one caveat: Sonnet's "no blockers" rule passed because the judge did not escalate a `pg_dump` fact error that Sonnet makes in 5 of 6 responses *with or without the skill*; in the previous run it did. Both runs are in the file.
 
 ### The run that was wrong
 
@@ -220,7 +223,7 @@ The eval harness handed the skill to Claude Code as a *second* `--append-system-
 
 On the corrected harness, Opus fabricates nothing, and Sonnet's saving is −8% rather than −16% — the table above is the like-for-like one. The one "genuine Opus finding" I kept after the correction — that it paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` — did not survive a second look either: a grep of all 12 responses on that case shows neither model echoes the exact code in either condition. It is the weakest case on both models, logged as open, and not a skill defect.
 
-It took nine runs. [`evals/RESULTS.md`](evals/RESULTS.md) has all of them — the four that failed on the skill's merits, the one where optimising for tokens cost fidelity, and the one that was my own harness.
+It took thirteen runs. [`evals/RESULTS.md`](evals/RESULTS.md) has all of them — the four that failed on the skill's merits, the one where optimising for tokens cost fidelity, the one that was my own harness, and the two where the first cut of the shorter skill made Opus thin its answers until two sentences went back in.
 
 Reproduce it:
 
