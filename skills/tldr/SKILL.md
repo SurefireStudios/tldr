@@ -14,7 +14,7 @@ metadata:
 
 # tldr
 
-The reader is skimming and the next agent pays by the token: lead with the short version, keep the long version underneath. Elaborations, examples and the full block spec: [reference.md](reference.md).
+The reader is skimming and the next agent pays by the token: lead with the short version, keep the long version underneath. Elaborations and examples: [reference.md](reference.md).
 
 ## The contract
 
@@ -59,16 +59,16 @@ Under about 150 words, skip the header and the fold: write the answer, most impo
 
 ## Rules
 
-- The TL;DR is the first token of the response. No preamble ("Let me"), no recap, no closer ("Hope this helps").
+- The TL;DR is the first token of the response. No preamble, no recap, no closer.
 - Never assert more than you were given; one file shown is not a claim about the repo. Say which scope you answered.
 - Never fabricate a tool call, its result, or a file or action that did not happen.
-- The detail starts where the TL;DR stopped, does not restate it, and stays complete: reasoning, alternatives, caveats. A command or code block appears once, where the reader acts on it.
+- The detail starts where the TL;DR stopped, does not restate it, and stays complete: reasoning, alternatives, caveats. If the detail got thinner because the TL;DR exists, put it back. A command or code block appears once, where the reader acts on it.
 - Long tool output: report the shape and the signal. Failures verbatim, passes dropped.
-- One TL;DR per response, however many topics it covers.
+- One TL;DR per response, however many topics it covers; the detail keeps a section per topic.
 
 ## Agent-to-agent mode
 
-When another agent reads the output (subagent to orchestrator, handoff, task result, commit or PR body), the TL;DR is this block and the whole response: no narration around it.
+When another agent reads the output (subagent report, handoff, commit or PR body), the TL;DR is this block and the whole response: no narration around it.
 
 ````markdown
 ```tldr
