@@ -156,25 +156,26 @@ Hay un arnés de evaluación reproducible en [`evals/`](../../evals/) que mide d
 - **Calidad** — corrección, fidelidad, accionabilidad y seguridad, evaluadas a ciegas contra una línea base.
 - **Tokens** — recuento real de tokens de salida, porque el sentido de comprimir es el coste.
 
-Medido sobre 16 casos × 3 ensayos contra una línea base sin skill (`claude-sonnet-5`):
+Medido sobre 16 casos × 3 ensayos, evaluado a ciegas contra una línea base sin skill, en dos modelos con el mismo instrumento. Esta es la skill publicada (v0.3.0):
 
-| | Línea base | Con tldr | |
-| --- | ---: | ---: | --- |
-| Tokens de salida (media) | 339 | **283** | −16% |
-| Mediana | 295 | **186** | −37% |
-| Corrección | 4.771 | **4.979** | +0.208 |
-| Fidelidad | 4.521 | **4.750** | +0.229 |
-| Accionabilidad | 4.312 | **4.896** | +0.583 |
+| | Sonnet | | Opus | |
+| --- | ---: | --- | ---: | --- |
+| Corrección | 4.854 → **4.938** | +0.083 | 4.792 → **4.917** | +0.125 |
+| Fidelidad | 4.583 → **4.792** | +0.208 | 4.625 → **4.729** | +0.104 |
+| Accionabilidad | 4.396 → **4.750** | +0.354 | 4.396 → **4.875** | +0.479 |
+| Seguridad | 4.604 → **4.750** | +0.146 | 4.562 → **4.896** | +0.333 |
+| Tokens de salida agente-a-agente | 194 → **122** | −37% | 337 → **139** | −59% |
+| Tokens de salida para humanos, mediana | 311 → **269** | −13% | 455 → **258** | −43% |
+| Tokens de salida para humanos, media | 336 → 372 | +11% | 529 → 558 | +5% |
+| Tokens de la propia skill por turno (siempre activa) | 4,380 → **1,078** | −75% | 4,380 → **1,078** | −75% |
 
-Menos tokens **y** mejor en todas las dimensiones, sin hallazgos bloqueantes. El criterio de publicación pasa las cinco reglas.
+Mejor en todas las dimensiones, en ambos modelos, y **el criterio de publicación pasa las cinco reglas en ambos**. Lee las filas de tokens con cuidado: donde la skill comprime — los informes agente-a-agente — la salida cae entre un tercio y la mitad. Donde se niega a comprimir — acciones destructivas, hallazgos de seguridad, coste, errores — la salida se alarga, porque el modelo ahora mantiene cada advertencia por encima del pliegue en vez de adelgazarla; por eso la media sube mientras la mediana baja, y cada uno de esos casos puntuó más alto en fidelidad o seguridad. El número más grande es el tamaño de la propia skill: un arnés siempre activo la reenvía en cada turno, y la versión anterior de 18k costaba unas 80 veces por turno lo que ahorraba.
 
-Ahora las advertencias, porque un número sin ellas es marketing: la línea base se regenera en cada ejecución y esta vez bajó, así que alrededor de un cuarto de la mejora es el punto de comparación moviéndose, no la skill. El error estándar sobre los 48 pares es de unos 0.090. La candidata gana 34 pares y pierde 11. Y esto es una sola ejecución, sobre un solo modelo.
-
-Publicar solo una de las dos es como las afirmaciones sobre compresión acaban siendo engañosas. Metodología y criterios de publicación en [`evals/RESULTS.md`](../../evals/RESULTS.md). Los números se publican tanto si favorecen a la skill como si no.
+Hicieron falta trece ejecuciones, incluidas las que fallaron y una en la que el error estaba en mi propio arnés. Metodología, criterios de publicación y las trece en [`evals/RESULTS.md`](../../evals/RESULTS.md). Los números se publican tanto si favorecen a la skill como si no.
 
 ## Agentes compatibles
 
-Claude Code, Cursor, Codex, Gemini CLI, GitHub Copilot, OpenCode, Zed, Windsurf, Cline, Roo Code, Aider, Amp, Qwen Code, Kimi Code CLI, Pi, Oh My Pi y Antigravity — instrucciones completas en [INSTALL.md](../../INSTALL.md).
+Claude Code, Cursor, Cybara, OpenClaw, Hermes, Codex, Gemini CLI, GitHub Copilot, OpenCode, Zed, Windsurf, Cline, Roo Code, Aider, Amp, Qwen Code, Kimi Code CLI, Pi, Oh My Pi y Antigravity — instrucciones completas en [INSTALL.md](../../INSTALL.md).
 
 La skill es markdown puro sin runtime, así que funciona en cualquier herramienta que acepte instrucciones personalizadas, incluidas las que no están en la lista.
 
