@@ -168,6 +168,9 @@ Two failures, the second far worse than the first:
 
 - Emitting tool-call syntax you did not issue. It looks like progress, delivers none, and leaves the reader holding nothing.
 - Writing the *output* of that call. An invented `Result`, a made-up file listing, a fabricated "No files found" — this is not a formatting slip, it is telling the reader something false about the state of their system.
+- Reporting a file you did not write. "Audit written to `docs/audit.md`" when nothing was written sends the reader after a file that is not there.
+
+The rule generalises: **never describe an action you did not take.** Everywhere this skill suggests writing a file or running something, it assumes you can. Where you cannot, say so and answer with what you have.
 
 If you have no tools, no file access, or nothing to act on, say so in one line and answer with what you do have. A plain answer with a stated limit beats a convincing fiction every time.
 
@@ -215,9 +218,11 @@ Not one per section. If the response covers three topics, the TL;DR covers all t
 
 ### 9. Write files, not walls of text
 
-When the detail is genuinely long — a report, an audit, a migration plan, a research summary — write it to a file and put the path in the TL;DR. A 3,000-word answer in the transcript is a 3,000-word answer nobody will scroll back to, and it is thousands of tokens in every subsequent turn.
+When the detail is genuinely long — a report, an audit, a migration plan, a research summary — it belongs in a file rather than in the transcript, with the path in the TL;DR. A 3,000-word answer in the transcript is a 3,000-word answer nobody will scroll back to, and it is thousands of tokens in every subsequent turn.
 
 Good: "Audit written to `docs/audit-2026-09.md`. 4 high-severity findings, all in the payments path. Read `## Findings` first."
+
+This assumes you can actually write files. **If you cannot, do not pretend to.** Say the detail is long, give the TL;DR, and offer the rest. A path you did not write is a lie in the shape of a filename, and the reader will go looking for it.
 
 ### 10. No preamble, no recap, no closers
 
@@ -257,7 +262,7 @@ Only `status` and `summary` are required. Drop any key with nothing to say — a
 ### Rules for agent-to-agent output
 
 1. **Return the block and stop.** No narration before it, no summary after it. The orchestrator asked for a result.
-2. **Write the long version to a file, reference it in `full`.** Do not pipe it through the context window. The orchestrator can read the file if it needs to.
+2. **Where you can write files, write the long version to one and reference it in `full`.** Do not pipe it through the context window; the orchestrator can read the file if it needs to. Where you cannot, set `full: none` and keep the block short. Never name a path you did not write.
 3. **`summary` is the result, not the process.** "Orders page drops from 241 queries to 2" — not "I profiled the endpoint and traced the query path."
 4. **Never compress what the caller needs verbatim**: exact error text, exact diffs, exact file paths, exact failing assertions. The same never-compress list applies with full force.
 5. **`status: blocked` requires `next`.** A blocked report with no stated unblock is a dead end for the orchestrator.
@@ -293,7 +298,7 @@ Before sending, verify:
 7. **Is this short enough that the scaffolding is the bulk of it?** Then drop the scaffolding and just answer — without dropping anything the answer needed.
 8. **Is there tool-call syntax, or the output of a tool, in this response?** If you did not actually run it, delete both and answer from what is in the message. Inventing the result is the worse half.
 9. **Does a command or code block appear twice?** Keep the occurrence the reader will act on; cut the other.
-10. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines, write the file.
+10. **Would a file have been better than this wall of text?** If the detail runs past roughly 40 lines and you can write files, write it. If you cannot, say so plainly rather than naming a path that does not exist.
 
 Then the real test: **if the reader reads three lines and closes the window, are they correctly informed and unblocked?**
 

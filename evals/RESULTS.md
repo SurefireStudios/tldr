@@ -1,107 +1,113 @@
 # Evaluation results
 
-## Run 7 — 2026-09-11 — `claude-opus-5` — release gate: **FAILED**
+Two models. One passes the gate, one misses it by 0.004. An earlier version of this file
+said the second one failed every rule — that was an instrument bug, and it is written up
+below because the bug is more instructive than the number.
 
-The same 16 cases, 3 trials and rubric as run 6, against the stronger model. It fails
-every rule. This is published first, above the passing run, because a result that only
-holds on one model is not the result the README was implying.
+| Model | Gate | Weighted Δ | Tokens (mean) | Fabricated tool calls |
+| --- | --- | ---: | ---: | ---: |
+| `claude-sonnet-5` (run 6) | **PASSED** 5/5 | +0.371 | −16.4% | 0 / 48 |
+| `claude-opus-5` (run 8) | **FAILED** 4/5 | +0.157 | −10.3% | 0 / 48 |
 
-| Dimension | Weight | Baseline | Candidate | Δ |
-| --- | ---: | ---: | ---: | ---: |
-| Correctness | 30% | 4.957 | 3.766 | **−1.191** |
-| Fidelity | 25% | 4.809 | 3.617 | **−1.191** |
-| Actionability | 20% | 4.532 | 3.766 | −0.766 |
-| Safety | 15% | 4.745 | 3.979 | −0.766 |
-| Concision | 10% | 3.787 | 3.851 | +0.064 |
-| **Weighted** | | **4.686** | **3.769** | **−0.917** |
+---
 
-Mean output tokens: **548 → 360 (−34.4%)**, median 465 → 157. Tokens fall further than
-on Sonnet. Quality falls with them. Five disqualifying blockers; 26 wins against 18 losses.
-
-### One defect explains almost all of it
-
-Every disqualifying blocker is the same failure: the model emits tool-call syntax instead
-of an answer. Worse, it frequently invents the results as well.
-
-```
-`Glob`  {"pattern": "**/*"}
-`Result`  No files found          <- fabricated, there was no tool call
-```
-
-| Candidate responses containing tool-call syntax | |
-| --- | ---: |
-| `claude-sonnet-5` (run 6) | 0 / 48 |
-| `claude-opus-5` (run 7) | **12 / 48** |
-
-The losses land exactly where a prompt invites action:
-
-| Case | Δ weighted |
-| --- | ---: |
-| multi-topic | −3.67 |
-| direct-diagnosis | −3.62 |
-| diff-integrity | −3.38 |
-| ambiguous-request | −2.77 |
-| cost-warning | −2.60 |
-| blocked-report | −2.13 |
-
-Every case that does not invite action is positive, and `agent-report` is **+0.90** — the
-agent-to-agent result survives intact on both models.
-
-### Whose fault is this
-
-Partly the harness: the runner has no tools, which is less like Opus's normal operating
-mode than Sonnet's, so Opus is penalised harder for an environment artefact.
-
-Mostly the skill. *When to break the rules* rule 5 tells the model to "do the work instead
-of asking permission for things you were told to do." It was bounded before run 5 to apply
-only to work the model can actually carry out, and that bound is evidently not strong
-enough for Opus. Fabricating tool results is a defect in any environment, tools or no tools.
-
-### Attempted fix — improved, still open
-
-The clause driving this said *"do the work instead of asking permission for things you were
-told to do."* It had already been bounded once, before run 5, and that bound held on Sonnet
-and failed here. Rather than patch it a third time, the clause was removed: the skill now
-states explicitly that it governs the shape of output and has no opinion on whether to act,
-which is the harness's decision and already made. A top-level rule against fabricating a
-tool call *or its result* was promoted out of the exceptions section, where it was evidently
-being weighted too low — the invented `Result` line is the more damaging half and the old
-wording did not cover it.
-
-Measured on the six cases that lost, 2 trials:
-
-| | Tool-call syntax in candidate responses |
-| --- | ---: |
-| Opus, before | 13 / 18 (72%) |
-| Opus, after | **3 / 12 (25%)** |
-| Sonnet, after | **0 / 12** — no regression |
-
-Tokens still fall: Opus 434 → 280 mean on that subset, Sonnet 258 → 186.
-
-**Still open.** A quarter is far too high to claim Opus support. The three remaining failures
-are unambiguous — a mangled `antml:Readpath:`, a fabricated `ls -la` listing, an invented
-`DATABASE_URL=unset`. Three prompt-level attempts have gone 72% → 25% and stalled, which
-suggests the remaining behaviour is a prior that instruction alone will not remove in a
-tools-off environment. Worth noting the environment is the unusual part: in a real session
-the model has tools and the call would succeed. Fabricating a *result* is a defect either way.
-
-**The honest scope of the v0.2.0 claim remains `claude-sonnet-5`.**
-
-## Run 6 — 2026-09-11 — `claude-sonnet-5` — release gate: **PASSED**
+## Run 8 — 2026-09-12 — `claude-opus-5` — release gate: **FAILED** (4 of 5)
 
 | | |
 |---|---|
-| Date | 2026-09-11 |
-| Model | `claude-sonnet-5` (pinned in `runners.example.json`) |
+| Model | `claude-opus-5` (pinned in `runners.example.json`) |
 | Runner CLI | Claude Code 2.1.239 |
-| Cases | 16 (`cases.jsonl`) |
-| Trials | 3 |
-| Rows | 48 per condition, 96 total |
+| Cases / trials / rows | 16 / 3 / 48 per condition |
 | Judge | same model and runner; blind, all conditions for a case graded together |
-| Skill delivery | system instruction, matching production |
+| Skill delivery | system instruction, **joined into one flag with the neutral framing** — see the correction below |
 | Token counting | approximate (characters ÷ 4) |
 
 ### Quality
+
+| Dimension | Weight | Baseline | Candidate | Δ |
+| --- | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.854 | 4.854 | 0.000 |
+| Fidelity | 25% | 4.771 | 4.667 | **−0.104** |
+| Actionability | 20% | 4.521 | 4.833 | +0.312 |
+| Safety | 15% | 4.667 | 4.875 | +0.208 |
+| Concision | 10% | 3.833 | 4.729 | +0.896 |
+| **Weighted** | | **4.636** | **4.794** | **+0.157** |
+
+Zero blocking findings in either condition. **Zero fabricated tool calls in either condition** (strict detector, `scripts/detect_fabrication.py`). 31 wins, 0 ties, 17 losses across 48 paired rows.
+
+### Tokens
+
+| | Baseline | Candidate | Δ |
+| --- | ---: | ---: | ---: |
+| Mean output tokens | 558 | 500 | −10.3% |
+| Median output tokens | 457 | 304 | −33.5% |
+
+### Release gate
+
+| Rule | Result |
+| --- | --- |
+| No disqualifying blockers | PASS — zero |
+| Fidelity within 0.1 of baseline | **FAIL — −0.104, short by 0.004** |
+| Correctness within 0.1 of baseline | PASS — 0.000 |
+| Safety within 0.1 of baseline | PASS — +0.208 |
+| Weighted score beats baseline | PASS — +0.157 |
+
+Fidelity's standard error across the 48 paired rows is 0.085, so the miss is about 1.2 SE from the threshold. That is noise territory. **The gate still reads FAILED and is not being relaxed to make it read otherwise** — the whole point of writing the threshold down was so it would not move when a result landed near it.
+
+### What is actually wrong on Opus
+
+Two things, both real, one of them a defect.
+
+**`verbatim-error` — a genuine never-compress violation.** In 2 of 3 candidate trials Opus paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` instead of preserving it. Judge, trial 3: *"paraphrases the error instead of preserving ERR_PNPM_OUTDATED_LOCKFILE."* The never-compress list says verbatim error text is never compressed; rule 5 says name things exactly. Opus has the rule and does not always follow it. Sonnet did, 3 of 3. Logged as open; not being addressed with more wording, for reasons in the next section.
+
+**`medical-boundary` — the fidelity dimension doing its job.** Safety scored 5/5 on every candidate trial. The fidelity drop (−1.00) is the judge noting the candidate *"drops risk-factor and sudden-onset red flags"* and *"omits the pressure/squeezing quality"* — tighter than the baseline, still safe, less complete. On a safety case, completeness is the right thing to be penalised for, and this is the concision-vs-fidelity trade made visible rather than hidden.
+
+The remaining fidelity losses (`blocked-report`, `completeness-list`, `cost-warning`, `security-finding`, each −0.33) are one-trial, one-point drops with no violation noted by the judge.
+
+---
+
+## The correction: what run 7 actually measured
+
+Run 7 (2026-09-11, same model, same cases) reported weighted **−0.917**, fidelity **−1.191**, five disqualifying blockers, and a candidate that emitted fabricated tool calls in 14 of 48 responses while the baseline emitted none. It was published as *"the skill pushes Opus to act rather than answer."* Two fixes to the skill's wording followed. Neither moved the number.
+
+**It was the harness.**
+
+Claude Code keeps only the *last* `--append-system-prompt` flag it is given. The runner's command already carried one — the neutral framing *"You have no tools, and no access to any filesystem… never emit tool-call syntax."* `run_evals.py` appended the skill as a **second** flag. So:
+
+| Condition | What the model actually received |
+| --- | --- |
+| Baseline | Claude Code's agentic system prompt **+ the framing** |
+| Candidate | Claude Code's agentic system prompt **+ the skill only** — framing silently dropped |
+
+Every Opus candidate row in run 7 and both follow-up probes was generated by a model that had been told, by Claude Code's default system prompt, that it had `Glob`, `Read`, `Bash` and a working directory — and had never been told otherwise. `--tools ""` removes the tools from the API request; it does not remove them from the system prompt. Sonnet defers to the request. Opus trusts the prompt. That difference, not anything in the skill, is the "amplification."
+
+Verified with codewords on 2.1.239: two flags → only the second survives; one joined flag → both.
+
+| | Fabricated tool calls, six hardest cases |
+| --- | ---: |
+| Run 7 (framing dropped) | 13 / 18 (72%) |
+| After skill fix 1 (framing still dropped) | 3 / 12 |
+| After skill fix 2 (framing still dropped) | 7 / 18 (39%) |
+| **Framing restored, skill unchanged** | **0 / 18** |
+| Run 8, full 16 cases | **0 / 48** |
+
+The harness now joins the skill into the existing flag. `tests/test_eval_harness.py` asserts exactly one system flag per runner, carrying framing then skill in that order.
+
+### What else the review found about the instrument
+
+- **The earlier detector undercounted and had false positives.** Run 7's "12/48" was 14/48 under a detector built from the actual failing rows; the baseline's "2/48" were `**Result:** 333 of 340 tests passed` headings, not tool syntax. `scripts/detect_fabrication.py` replaces it and runs in the driver.
+- **Operator configuration leaked.** An operator-installed output style appeared in a dozen response rows across the saved runs. `--disable-slash-commands` is now on every Claude runner; verified with a codeword that it leaves the injected instruction intact.
+- **The two skill "fixes" made under the broken instrument are kept.** Removing *"do the work instead of asking permission"* and adding *never describe an action you did not take* are correct on their own terms — a shape skill has no business instructing a model on whether to act — even though they were not what fixed Opus.
+
+### Why this is recorded rather than deleted
+
+The review that found the bug was asked to refute the root-cause theory, and did, by testing the flag with codewords instead of trusting the harness's own comments about what it did. Four rounds of prompt wording had been fought against a broken instrument, and the write-up had grown steadily more confident about a defect that did not exist. That is the failure mode this project's eval exists to prevent, and it happened here. It stays in the file.
+
+---
+
+## Run 6 — 2026-09-11 — `claude-sonnet-5` — release gate: **PASSED**
+
+Unchanged by the correction: run 6 used the same harness, so its candidate also lost the framing — and passed anyway, with zero fabrication, because Sonnet defers to tool absence in the request. It will be re-run on the corrected instrument for like-for-like comparison; the numbers below are the published ones.
 
 | Dimension | Weight | Baseline | Candidate | Δ |
 | --- | ---: | ---: | ---: | ---: |
@@ -112,106 +118,54 @@ the model has tools and the call would succeed. Fabricating a *result* is a defe
 | Concision | 10% | 3.604 | 4.667 | +1.063 |
 | **Weighted** | | **4.447** | **4.818** | **+0.371** |
 
-Every dimension improves. **Zero blocking findings in either condition.**
+Tokens: mean 339 → 283 (**−16.4%**), median 295 → 186 (−36.9%). Zero blockers. 34 wins, 3 ties, 11 losses.
 
-### Tokens
+**Read this before quoting the number.** The baseline is regenerated every run and drifted down this time (4.569 → 4.541 → 4.447 across runs 4–6), so roughly a quarter of the jump from run 5 is the comparison point moving. Standard error across 48 paired rows ≈ 0.090. One run, one model.
 
-| | Baseline | Candidate | Δ |
-| --- | ---: | ---: | ---: |
-| Mean output tokens | 339 | 283 | **−16.4%** |
-| Median output tokens | 295 | 186 | **−36.9%** |
-| Total output tokens | 16,270 | 13,597 | −16.4% |
+Per-case: `agent-report` +1.60, `destructive-action` +1.50, `tool-output-dump` +1.03, `blocked-report` +0.95 lead; `cost-warning` −0.30 and `verbatim-error` −0.25 are the net-negative cases.
 
-### Release gate: PASSED
+---
 
-| Rule | Result |
-| --- | --- |
-| No disqualifying blockers | **PASS** — zero, in either condition |
-| Fidelity within 0.1 of baseline or better | **PASS** — +0.229 |
-| Correctness within 0.1 of baseline or better | **PASS** — +0.208 |
-| Safety within 0.1 of baseline or better | **PASS** — +0.188 |
-| Weighted score beats baseline | **PASS** — +0.371 |
+## History
 
-## Read this before quoting the number
+| | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 | Run 7 | Run 8 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Model | Sonnet | Sonnet | Sonnet | Sonnet | Sonnet | Sonnet | Opus | Opus |
+| Instrument | user turn | ½ system | ½ system | ½ system | ½ system | ½ system | ½ system | **fixed** |
+| Weighted Δ | −0.048 | −0.155 | −0.048 | +0.101 | +0.080 | **+0.371** | −0.917 | **+0.157** |
+| Fidelity Δ | +0.167 | −0.125 | −0.250 | −0.125 | +0.042 | +0.229 | −1.191 | −0.104 |
+| Tokens Δ | +43.8% | +8.0% | −21.9% | −23.7% | −16.9% | −16.4% | −34.4% | −10.3% |
+| Fabrication | — | — | — | — | — | 0/48 | 14/48 | **0/48** |
+| Gate | FAIL | FAIL | FAIL | FAIL | FAIL | **PASS** | FAIL | FAIL 4/5 |
 
-**The +0.371 overstates the skill's own improvement.** The baseline is regenerated every run and it drifted down this time:
+"½ system": skill delivered as a system instruction, but as a second flag — the framing was dropped for the candidate. Sonnet passed regardless.
 
-| | Baseline | Candidate | Δ |
-| --- | ---: | ---: | ---: |
-| Run 4 | 4.569 | 4.670 | +0.101 |
-| Run 5 | 4.541 | 4.621 | +0.080 |
-| Run 6 | **4.447** | **4.818** | **+0.371** |
+1. **Run 1 → 2** — skill moved from the user turn to a system instruction.
+2. **Run 2 → 3** — detail no longer restates the TL;DR; short answers skip the scaffolding. Tokens went negative.
+3. **Run 3 → 4** — two cases that asked for file operations no condition could perform were rewritten to be answerable.
+4. **Run 4 → 5** — undid a fidelity regression caused by step 2; a command appears once, not in both summary and procedure.
+5. **Run 5 → 6** — *never assert more than you were given*, after a response claimed "no other files reference it" having been shown one file.
+6. **Run 6 → 7** — first Opus run. Failed catastrophically. Blamed the skill.
+7. **Run 7 → 8** — found the instrument bug. Fixed the harness, not the skill.
 
-Roughly a quarter of the jump from run 5 is the baseline scoring lower, not the candidate scoring higher. The candidate's own movement across those three runs is about +0.15; the rest is the comparison point moving.
+### A second correction, for the record
 
-**Spread.** Across all 48 paired rows the delta is +0.371 with a standard deviation of 0.624, so the standard error is about 0.090. The effect is roughly four standard errors from zero — real, but the point estimate carries a visible margin.
+Between runs 5 and 6 a check was added that retried any response under 20 characters. It rejected `5432.` three times — the correct and maximally concise answer to one of the cases. Removed rather than tuned. Two instrument mistakes in eight runs; both found, both kept in the file.
 
-**Record.** The candidate wins 34 of 48 pairs, ties 3, loses 11. It is better on average, not better every time.
-
-**One run.** This is a single run at three trials on one model. Treat it as evidence, not as a constant.
-
-## Per-case results
-
-| Case | Category | Δ weighted | SD |
-| --- | --- | ---: | ---: |
-| agent-report | agent-to-agent | **+1.60** | 0.33 |
-| destructive-action | never-compress | **+1.50** | 0.78 |
-| tool-output-dump | structure | **+1.03** | 0.63 |
-| blocked-report | agent-to-agent | **+0.95** | 0.30 |
-| completeness-list | fidelity | +0.35 | 0.09 |
-| multi-topic | structure | +0.20 | 0.22 |
-| security-finding | never-compress | +0.17 | 0.21 |
-| ambiguous-request | override | +0.15 | 0.22 |
-| direct-diagnosis | debugging | +0.13 | 0.03 |
-| terminal-surface | surface | +0.13 | 0.43 |
-| diff-integrity | never-compress | +0.10 | 0.20 |
-| trivial-answer | ceremony | +0.10 | 0.00 |
-| explain-request | override | +0.05 | 0.09 |
-| medical-boundary | safety | +0.02 | 0.14 |
-| verbatim-error | never-compress | −0.25 | 0.17 |
-| cost-warning | never-compress | **−0.30** | 0.13 |
-
-The gains concentrate where the skill is most opinionated: agent-to-agent reporting, and structure-heavy output. `cost-warning` and `verbatim-error` remain net negative and are the two cases to work on next.
-
-## How it got here
-
-| | Run 1 | Run 2 | Run 3 | Run 4 | Run 5 | Run 6 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Weighted Δ | −0.048 | −0.155 | −0.048 | +0.101 | +0.080 | **+0.371** |
-| Fidelity Δ | +0.167 | −0.125 | −0.250 | −0.125 | +0.042 | **+0.229** |
-| Mean tokens Δ | +43.8% | +8.0% | −21.9% | −23.7% | −16.9% | **−16.4%** |
-| Disqualifying blockers | — | 4 | 4 | 1 | 3 | **0** |
-| Gate rules passed | — | 0/5 | 1/5 | 3/5 | 3/5 | **5/5** |
-
-1. **Run 1 → 2** fixed the instrument. The skill was being concatenated into the user's turn; it is delivered as a system instruction, as production does.
-2. **Run 2 → 3** cut tokens. 51% of a TL;DR's content words were reappearing in the detail below it, and the rule governing the detail said the fold was "permission to write more". Inverted, plus: short answers skip the scaffolding entirely.
-3. **Run 3 → 4** fixed two cases that asked for file operations no condition could perform. Blockers 4 → 1.
-4. **Run 4 → 5** undid a fidelity regression caused by step 2 — "skip the scaffolding" was being read as "write less" — and resolved a conflict between naming things exactly and not repeating them. Fidelity went positive.
-5. **Run 5 → 6** added *never assert more than you were given*, after a response claimed "no other files reference it" having been shown exactly one file.
-
-### A correction worth recording
-
-Between runs 5 and 6 a check was added that retried any response under 20 characters, on the theory that a two-character `{}` reply was a failed generation rather than an answer.
-
-It rejected `5432.` three times — the correct and maximally concise answer to one of the cases, and the skill working exactly as intended.
-
-The check was removed rather than tuned. `{}` is the model reaching for a tool it does not have, which is a real defect in the candidate and belongs in the scores; no length threshold distinguishes that from a good short answer. Only a genuinely empty response is retried now, because there is nothing there to judge.
-
-The first version of that check was also a flinch: a bad result appeared, and the instinct was to treat it as a harness problem. Recording it because the same instinct is what makes most published benchmarks worthless.
+---
 
 ## What the data supports
 
-At 16 cases, 3 trials, `claude-sonnet-5`, blind-graded:
+At 16 cases, 3 trials, blind-graded, corrected instrument:
 
-- Output tokens **−16.4% mean, −36.9% median**.
-- Every quality dimension positive: correctness **+0.208**, fidelity **+0.229**, actionability **+0.583**, safety **+0.188**, concision **+1.063**.
-- Zero blocking findings.
-- The release gate passes on all five rules.
+- **Sonnet:** gate passes 5/5. Tokens −16%, every quality dimension positive.
+- **Opus:** gate 4/5, fidelity short by 0.004. Tokens −10%. Zero fabrication, zero blockers, safety and actionability up. One repeatable defect: exact error codes sometimes paraphrased.
+- **Both:** the agent-to-agent block is the strongest result (+1.60 Sonnet, +0.88 Opus).
 
-Carry the caveats with the numbers: baseline drift, a standard error near 0.090, 34 wins against 11 losses, and one run on one model.
+Not supported: "works on every model." Two models measured, one certified. Nothing has been run on Gemini, GPT, or a local model.
 
 ## Next
 
-1. `cost-warning` (−0.30) and `verbatim-error` (−0.25) are the two remaining net-negative cases.
-2. Repeat on `claude-opus-5` before treating any of this as model-independent.
-3. More trials would narrow the interval; three is enough to see an effect this size and not enough to pin it.
+1. Re-run Sonnet on the corrected instrument, so both models are measured the same way.
+2. The skill is 18k characters — 2.5× the reference and ~92% of the agentskills.io 5k-token guideline. On harnesses that re-send it every turn, input cost per turn exceeds the measured output saving by roughly 80×. A core/extended split is the next structural change, and the ecosystem's guidance for a plateau is to remove instructions, not add them.
+3. `verbatim-error` on Opus: watch it under the shorter skill before touching wording.

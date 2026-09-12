@@ -207,27 +207,30 @@ Results are **model-specific** — see the Opus section below before generalisin
 
 Fewer tokens **and** better on every dimension, with zero blocking findings. The release gate passes on all five rules — **on `claude-sonnet-5`.**
 
-### It does not hold on Opus
+### On Opus — and a correction
 
-The same suite on `claude-opus-5` fails the gate on all five rules: weighted **−0.917**, fidelity **−1.191**, and five disqualifying blockers.
+An earlier version of this section said the skill failed every gate rule on `claude-opus-5`. **That was wrong**, and the reason is worth a paragraph.
 
-One defect accounts for nearly all of it. Given a task that invites action, the skill pushes Opus to *act* rather than answer — and with no tools available it emits tool-call syntax, sometimes inventing the results too:
+The eval harness handed the skill to Claude Code as a *second* `--append-system-prompt` flag. Claude Code keeps only the last one. So every Opus candidate run silently lost the "you have no tools" framing that every baseline kept — and Opus, told by Claude Code's own system prompt that it had Glob, Read and Bash, reached for them. That instrument bug was published as a skill defect and "fixed" twice with prompt wording before a review agent tested the flag with codewords instead of trusting the harness's comments.
 
-```
-`Glob`  {"pattern": "**/*"}
-`Result`  No files found          <- fabricated
-```
+On the corrected harness, same 16 cases × 3 trials:
 
-| Candidate responses containing tool-call syntax | |
-| --- | ---: |
-| `claude-sonnet-5` | **0 / 48** |
-| `claude-opus-5` | **12 / 48** |
+| | Baseline | With `tldr` | |
+| --- | ---: | ---: | --- |
+| Fabricated tool calls | 0 / 48 | **0 / 48** | |
+| Mean output tokens | 558 | **500** | −10% |
+| Median output tokens | 457 | **304** | −33% |
+| Correctness | 4.854 | 4.854 | 0.000 |
+| Fidelity | 4.771 | 4.667 | **−0.104** |
+| Actionability | 4.521 | **4.833** | +0.312 |
+| Safety | 4.667 | **4.875** | +0.208 |
+| Concision | 3.833 | **4.729** | +0.896 |
 
-Tokens actually fall *further* on Opus (−34%). The quality goes with them. That is precisely the trade this project claims not to make, so it is stated here rather than buried: **as of v0.2.0, use it on Sonnet. The Opus defect is open.**
+Four of five gate rules pass. **Fidelity misses by 0.004** against a −0.1 threshold, with a standard error of 0.085 — so the gate reads FAILED, and it is not being relaxed to make it read otherwise. Zero blockers, 31 wins to 17 losses, and the agent-to-agent result holds on Opus too (+0.88 on `agent-report`).
 
-**Now the caveats, because a number without them is marketing.** The baseline is regenerated each run and drifted down this time, so roughly a quarter of the headline gain is the comparison point moving rather than the skill improving. Across all 48 paired rows the standard error is about 0.090. The candidate wins 34 pairs, loses 11 — better on average, not better every time. And this is one run, on one model.
+The one genuine violation in the data: `verbatim-error`, where Opus once paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` instead of preserving it — exactly what the never-compress list forbids. That is a real finding about the skill and it is logged as open.
 
-It took six runs to get here, and the first four failed the gate. [`evals/RESULTS.md`](evals/RESULTS.md) has all of them, including the run where optimising for tokens cost fidelity and the gate caught it, and the check I added that rejected `5432.` as a malformed answer.
+**Usable on Opus; not yet certified there.** [`evals/RESULTS.md`](evals/RESULTS.md) has the full account, including the run that was wrong.
 
 Reproduce it:
 

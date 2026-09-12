@@ -85,6 +85,13 @@ GATE=$?
 say "Token accounting"
 $PY scripts/count_tokens.py "$RESPONSES"
 
+# Automated count of fabricated tool calls and results, per condition. The blind
+# judge catches most of these as blockers; this catches all of them, and shows
+# amplification (baseline vs candidate) at a glance. It is what exposed the fact
+# that the earlier ad-hoc detection had undercounted by a third.
+say "Fabrication"
+$PY scripts/detect_fabrication.py "$RESPONSES"
+
 say "Done"
 echo "  responses: $RESPONSES"
 echo "  scores:    $SCORES"
