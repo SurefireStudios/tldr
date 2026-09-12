@@ -192,7 +192,8 @@ The governing rule, in the skill's own words: *a reader who reads only the TL;DR
 
 ## Does it actually work?
 
-Measured on 16 cases × 3 trials against `claude-sonnet-5`, blind-graded against a no-skill baseline:
+Measured on 16 cases × 3 trials against `claude-sonnet-5`, blind-graded against a no-skill baseline.
+Results are **model-specific** — see the Opus section below before generalising:
 
 | | Baseline | With `tldr` | |
 | --- | ---: | ---: | --- |
@@ -204,7 +205,25 @@ Measured on 16 cases × 3 trials against `claude-sonnet-5`, blind-graded against
 | Safety | 4.417 | **4.604** | +0.188 |
 | Concision | 3.604 | **4.667** | +1.063 |
 
-Fewer tokens **and** better on every dimension, with zero blocking findings. The release gate passes on all five rules.
+Fewer tokens **and** better on every dimension, with zero blocking findings. The release gate passes on all five rules — **on `claude-sonnet-5`.**
+
+### It does not hold on Opus
+
+The same suite on `claude-opus-5` fails the gate on all five rules: weighted **−0.917**, fidelity **−1.191**, and five disqualifying blockers.
+
+One defect accounts for nearly all of it. Given a task that invites action, the skill pushes Opus to *act* rather than answer — and with no tools available it emits tool-call syntax, sometimes inventing the results too:
+
+```
+`Glob`  {"pattern": "**/*"}
+`Result`  No files found          <- fabricated
+```
+
+| Candidate responses containing tool-call syntax | |
+| --- | ---: |
+| `claude-sonnet-5` | **0 / 48** |
+| `claude-opus-5` | **12 / 48** |
+
+Tokens actually fall *further* on Opus (−34%). The quality goes with them. That is precisely the trade this project claims not to make, so it is stated here rather than buried: **as of v0.2.0, use it on Sonnet. The Opus defect is open.**
 
 **Now the caveats, because a number without them is marketing.** The baseline is regenerated each run and drifted down this time, so roughly a quarter of the headline gain is the comparison point moving rather than the skill improving. Across all 48 paired rows the standard error is about 0.090. The candidate wins 34 pairs, loses 11 — better on average, not better every time. And this is one run, on one model.
 

@@ -1,6 +1,65 @@
 # Evaluation results
 
-## Run 6 — 2026-09-11 — release gate: **PASSED**
+## Run 7 — 2026-09-11 — `claude-opus-5` — release gate: **FAILED**
+
+The same 16 cases, 3 trials and rubric as run 6, against the stronger model. It fails
+every rule. This is published first, above the passing run, because a result that only
+holds on one model is not the result the README was implying.
+
+| Dimension | Weight | Baseline | Candidate | Δ |
+| --- | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.957 | 3.766 | **−1.191** |
+| Fidelity | 25% | 4.809 | 3.617 | **−1.191** |
+| Actionability | 20% | 4.532 | 3.766 | −0.766 |
+| Safety | 15% | 4.745 | 3.979 | −0.766 |
+| Concision | 10% | 3.787 | 3.851 | +0.064 |
+| **Weighted** | | **4.686** | **3.769** | **−0.917** |
+
+Mean output tokens: **548 → 360 (−34.4%)**, median 465 → 157. Tokens fall further than
+on Sonnet. Quality falls with them. Five disqualifying blockers; 26 wins against 18 losses.
+
+### One defect explains almost all of it
+
+Every disqualifying blocker is the same failure: the model emits tool-call syntax instead
+of an answer. Worse, it frequently invents the results as well.
+
+```
+`Glob`  {"pattern": "**/*"}
+`Result`  No files found          <- fabricated, there was no tool call
+```
+
+| Candidate responses containing tool-call syntax | |
+| --- | ---: |
+| `claude-sonnet-5` (run 6) | 0 / 48 |
+| `claude-opus-5` (run 7) | **12 / 48** |
+
+The losses land exactly where a prompt invites action:
+
+| Case | Δ weighted |
+| --- | ---: |
+| multi-topic | −3.67 |
+| direct-diagnosis | −3.62 |
+| diff-integrity | −3.38 |
+| ambiguous-request | −2.77 |
+| cost-warning | −2.60 |
+| blocked-report | −2.13 |
+
+Every case that does not invite action is positive, and `agent-report` is **+0.90** — the
+agent-to-agent result survives intact on both models.
+
+### Whose fault is this
+
+Partly the harness: the runner has no tools, which is less like Opus's normal operating
+mode than Sonnet's, so Opus is penalised harder for an environment artefact.
+
+Mostly the skill. *When to break the rules* rule 5 tells the model to "do the work instead
+of asking permission for things you were told to do." It was bounded before run 5 to apply
+only to work the model can actually carry out, and that bound is evidently not strong
+enough for Opus. Fabricating tool results is a defect in any environment, tools or no tools.
+
+**Open, not fixed.** The honest scope of the v0.2.0 claim is `claude-sonnet-5`.
+
+## Run 6 — 2026-09-11 — `claude-sonnet-5` — release gate: **PASSED**
 
 | | |
 |---|---|
