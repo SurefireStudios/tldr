@@ -29,8 +29,9 @@ Agents can access the complete project by reading repository-relative files afte
 
 | Area | Location | Purpose |
 | --- | --- | --- |
-| Canonical skill | `skills/tldr/SKILL.md` | The single source of truth for the TL;DR contract. |
-| Skill mirror | `.cursor/skills/tldr/SKILL.md` | Cursor-compatible copy; must stay byte-identical to the canonical skill. |
+| Canonical skill | `skills/tldr/SKILL.md` | The core: the single source of truth for the TL;DR contract, under 5,000 characters, read on every turn. |
+| Skill reference | `skills/tldr/reference.md` | The long form the core links to: reasoning, examples, the depth dial, the full block spec. Loaded on demand. |
+| Skill mirror | `.cursor/skills/tldr/` | Cursor-compatible copy of both files; must stay byte-identical to the canonical skill. |
 | Claude and Codex metadata | `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/` | What each marketplace reads to list and install the plugin. |
 | Slash commands | `commands/tldr.md`, `.opencode/command/tldr.md` | Command definitions for harnesses that load them from disk. |
 | Shared hooks | `hooks/hooks.json`, `hooks/always-on.*` | Hook declarations and cross-platform always-on behaviour. |
@@ -63,7 +64,7 @@ Each harness has one file worth opening first:
 
 ## Source-of-truth rules
 
-- Change `skills/tldr/SKILL.md` first when changing skill behaviour, then synchronize the `.cursor` mirror. `scripts/check_mirrors.py` enforces this and CI runs it on every pull request.
+- Change `skills/tldr/SKILL.md` (core) or `skills/tldr/reference.md` (elaborations) first when changing skill behaviour, then synchronize the `.cursor` mirror. `scripts/check_mirrors.py` enforces this for both files and CI runs it on every pull request.
 - Treat manifests and hook declarations as runtime contracts. Keep shared metadata, including version numbers, aligned across manifest files.
 - Keep installation and behaviour claims in `README.md`, `INSTALL.md`, and their localized counterparts accurate. A stale install command is a broken install.
 - Never weaken the never-compress list in `SKILL.md` without a corresponding eval case proving the change is safe.

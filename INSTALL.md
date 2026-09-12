@@ -1,6 +1,6 @@
 # How to install tldr
 
-`tldr` is a single markdown file — [`skills/tldr/SKILL.md`](skills/tldr/SKILL.md) — plus thin adapters for each of the 20 supported agents. There is no runtime and nothing to compile.
+`tldr` is one folder — [`skills/tldr/`](skills/tldr/), holding a short `SKILL.md` the model reads every time and a `reference.md` it opens on demand — plus thin adapters for each of the 20 supported agents. There is no runtime and nothing to compile.
 
 **Jump to your agent:**
 [Claude Code](#claude-code) ·
@@ -93,8 +93,8 @@ rm ~/.claude/.tldr-always
 
 ```bash
 git clone https://github.com/SurefireStudios/tldr.git
-mkdir -p ~/.claude/skills/tldr ~/.claude/commands
-cp tldr/skills/tldr/SKILL.md ~/.claude/skills/tldr/SKILL.md
+mkdir -p ~/.claude/skills ~/.claude/commands
+cp -r tldr/skills/tldr ~/.claude/skills/tldr
 cp tldr/commands/tldr.md ~/.claude/commands/tldr.md
 ```
 
@@ -106,11 +106,11 @@ cp tldr/commands/tldr.md ~/.claude/commands/tldr.md
 
 ```bash
 git clone https://github.com/SurefireStudios/tldr.git
-mkdir -p .cursor/skills/tldr
-cp tldr/skills/tldr/SKILL.md .cursor/skills/tldr/SKILL.md
+mkdir -p .cursor/skills
+cp -r tldr/skills/tldr .cursor/skills/tldr
 ```
 
-Or drop the same file in `~/.cursor/skills/tldr/SKILL.md` to make it available in every project.
+Or drop the same folder at `~/.cursor/skills/tldr/` to make it available in every project.
 
 ### Verify
 
@@ -153,8 +153,8 @@ If your Codex build does not have a plugin command, use the manual route:
 
 ```bash
 git clone https://github.com/SurefireStudios/tldr.git
-mkdir -p ~/.codex/skills/tldr
-cp tldr/skills/tldr/SKILL.md ~/.codex/skills/tldr/SKILL.md
+mkdir -p ~/.codex/skills
+cp -r tldr/skills/tldr ~/.codex/skills/tldr
 ```
 
 ### Verify and activate
@@ -367,6 +367,8 @@ mkdir -p .github
 cp /tmp/tldr/skills/tldr/SKILL.md .github/copilot-instructions.md
 ```
 
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
+
 Copilot Chat picks it up automatically for that repository. Strip the YAML frontmatter first if your Copilot version renders it literally.
 
 ### Copilot CLI
@@ -375,6 +377,8 @@ Copilot Chat picks it up automatically for that repository. Strip the YAML front
 mkdir -p ~/.copilot
 cp /tmp/tldr/skills/tldr/SKILL.md ~/.copilot/instructions.md
 ```
+
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
 
 ### Prompt file (opt-in instead of always-on)
 
@@ -445,6 +449,8 @@ git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
 cp /tmp/tldr/skills/tldr/SKILL.md .rules
 ```
 
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
+
 Zed also honours `.cursorrules` and `AGENT.md` if you already use one of those — copy the skill there instead to avoid a second rules file.
 
 ### Uninstall
@@ -464,6 +470,8 @@ git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
 mkdir -p .windsurf/rules
 cp /tmp/tldr/skills/tldr/SKILL.md .windsurf/rules/tldr.md
 ```
+
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
 
 For a global rule, use `~/.codeium/windsurf/memories/global_rules.md` instead.
 
@@ -485,12 +493,16 @@ mkdir -p .clinerules
 cp /tmp/tldr/skills/tldr/SKILL.md .clinerules/tldr.md
 ```
 
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
+
 ### Roo Code
 
 ```bash
 mkdir -p .roo/rules
 cp /tmp/tldr/skills/tldr/SKILL.md .roo/rules/tldr.md
 ```
+
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
 
 Both load every file in the rules directory on every request, so this is always-on. To make it opt-in, keep the file outside the rules directory and reference it when you want it.
 
@@ -510,6 +522,8 @@ rm .clinerules/tldr.md .roo/rules/tldr.md
 git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
 cp /tmp/tldr/skills/tldr/SKILL.md CONVENTIONS.md
 ```
+
+This copies the core only. The `reference.md` link inside it is inert here; the core is written to stand alone.
 
 Then load it read-only so it does not get edited:
 
@@ -537,8 +551,8 @@ Remove the `read` entry and delete `CONVENTIONS.md`.
 
 ```bash
 git clone https://github.com/SurefireStudios/tldr.git /tmp/tldr
-mkdir -p .agents/skills/tldr
-cp /tmp/tldr/skills/tldr/SKILL.md .agents/skills/tldr/SKILL.md
+mkdir -p .agents/skills
+cp -r /tmp/tldr/skills/tldr .agents/skills/tldr
 ```
 
 Amp discovers agent skills from `.agents/skills/`. For always-on, add a pointer to your `AGENT.md`:

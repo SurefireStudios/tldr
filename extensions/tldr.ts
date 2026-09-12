@@ -9,6 +9,9 @@ import {
 
 const EXTENSION_DIR = dirname(fileURLToPath(import.meta.url));
 const SKILL_PATH = join(EXTENSION_DIR, "..", "skills", "tldr", "SKILL.md");
+// The skill body links to this by relative path. The rules are injected as a
+// message with no base directory, so the header names the absolute path.
+const REFERENCE_PATH = join(EXTENSION_DIR, "..", "skills", "tldr", "reference.md");
 
 const STATE_ENTRY_TYPE = "tldr-state";
 const RULES_MESSAGE_TYPE = "tldr-rules";
@@ -77,7 +80,16 @@ function rulesHeader(depth: Depth): string {
       ? "Depth dial is set to 0: headline only, no detail section."
       : `Depth dial is set to ${depth}: ${depth} summary line(s), then the full detail.`;
 
-  return `TLDR MODE ACTIVE. The ruleset below applies to every response until turned off. ${dial} "stop tldr" or "normal mode" turns it off for this session.`;
+  let referenceNote = "";
+  try {
+    if (existsSync(REFERENCE_PATH)) {
+      referenceNote = ` The reference.md the rules link to is at ${REFERENCE_PATH}; read it only when a rule points you there.`;
+    }
+  } catch {
+    // Unreadable is the same as absent: the core stands alone.
+  }
+
+  return `TLDR MODE ACTIVE. The ruleset below applies to every response until turned off. ${dial} "stop tldr" or "normal mode" turns it off for this session.${referenceNote}`;
 }
 
 function getSavedState(ctx: ExtensionContext): Partial<TldrModeState> | undefined {

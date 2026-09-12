@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
 """Verify that every mirror of the canonical skill is byte-identical to it.
 
-`skills/tldr/SKILL.md` is the single source of truth. Harnesses that cannot read
-from that path get a copy, and a copy that drifts is worse than no copy at all:
-two harnesses would then follow two different rulesets while both claiming to run
-tldr.
+`skills/tldr/` is the single source of truth: `SKILL.md` is the core the model
+reads every time, `reference.md` is the long form it opens on demand. Harnesses
+that cannot read from that path get a copy, and a copy that drifts is worse than
+no copy at all: two harnesses would then follow two different rulesets while both
+claiming to run tldr.
 
 CI runs this on every pull request. Fix a failure by re-copying, never by editing
 the mirror:
 
-    cp skills/tldr/SKILL.md .cursor/skills/tldr/SKILL.md
+    cp skills/tldr/SKILL.md     .cursor/skills/tldr/SKILL.md
+    cp skills/tldr/reference.md .cursor/skills/tldr/reference.md
 """
 
 from __future__ import annotations
@@ -19,10 +21,13 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CANONICAL = REPO_ROOT / "skills" / "tldr" / "SKILL.md"
+CANONICAL_DIR = REPO_ROOT / "skills" / "tldr"
 
-MIRRORS = [
-    REPO_ROOT / ".cursor" / "skills" / "tldr" / "SKILL.md",
+# Every file the split ships. A mirror must carry all of them.
+FILES = ["SKILL.md", "reference.md"]
+
+MIRROR_DIRS = [
+    REPO_ROOT / ".cursor" / "skills" / "tldr",
 ]
 
 
@@ -31,38 +36,44 @@ def digest(path: Path) -> str:
 
 
 def main() -> int:
-    if not CANONICAL.exists():
-        print(f"error: canonical skill not found: {CANONICAL}", file=sys.stderr)
-        return 2
-
-    expected = digest(CANONICAL)
-    print(f"canonical  {CANONICAL.relative_to(REPO_ROOT)}  {expected[:12]}")
-
     failures = 0
-    for mirror in MIRRORS:
-        rel = mirror.relative_to(REPO_ROOT)
+    checked = 0
 
-        if not mirror.exists():
-            print(f"MISSING    {rel}", file=sys.stderr)
-            failures += 1
-            continue
+    for name in FILES:
+        canonical = CANONICAL_DIR / name
+        if not canonical.exists():
+            print(f"error: canonical file not found: {canonical}", file=sys.stderr)
+            return 2
 
-        actual = digest(mirror)
-        if actual != expected:
-            print(f"DRIFTED    {rel}  {actual[:12]}", file=sys.stderr)
-            failures += 1
-        else:
-            print(f"ok         {rel}  {actual[:12]}")
+        expected = digest(canonical)
+        print(f"canonical  {canonical.relative_to(REPO_ROOT)}  {expected[:12]}")
+
+        for mirror_dir in MIRROR_DIRS:
+            mirror = mirror_dir / name
+            rel = mirror.relative_to(REPO_ROOT)
+            checked += 1
+
+            if not mirror.exists():
+                print(f"MISSING    {rel}", file=sys.stderr)
+                failures += 1
+                continue
+
+            actual = digest(mirror)
+            if actual != expected:
+                print(f"DRIFTED    {rel}  {actual[:12]}", file=sys.stderr)
+                failures += 1
+            else:
+                print(f"ok         {rel}  {actual[:12]}")
 
     if failures:
         print(
-            f"\n{failures} mirror(s) out of sync. Re-copy from the canonical skill:\n"
-            f"  cp {CANONICAL.relative_to(REPO_ROOT)} <mirror>",
+            f"\n{failures} mirror file(s) out of sync. Re-copy from the canonical skill:\n"
+            f"  cp skills/tldr/<file> <mirror-dir>/<file>",
             file=sys.stderr,
         )
         return 1
 
-    print(f"\nOK — {len(MIRRORS)} mirror(s) in sync")
+    print(f"\nOK - {checked} mirror file(s) in sync")
     return 0
 
 

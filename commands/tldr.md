@@ -3,8 +3,9 @@ description: Lead with a three-line TL;DR and fold the detail, for the rest of t
 argument-hint: "[0|1|3|5|full] or a target to compress"
 ---
 
-Use the `tldr` skill (`skills/tldr/SKILL.md`) and apply its contract to every
-response for the rest of this session.
+Use the `tldr` skill (`skills/tldr/SKILL.md`; its `reference.md` holds the
+elaborations) and apply its contract to every response for the rest of this
+session.
 
 **The contract — demote, don't delete:**
 
@@ -13,12 +14,11 @@ response for the rest of this session.
    renders, a `--- detail ---` divider where it does not.
 3. Never thin the detail because the summary exists.
 
-**Never fold:** destructive actions, security findings, data loss,
-money and quota, verbatim error text, diffs of code being changed, and anything
-I explicitly asked to see in full.
+**Never fold:** destructive actions, security findings, data loss, money and quota, verbatim error text, diffs of code being changed, legal/medical/safety boundaries, and anything I asked to see in full.
 
-**Agent-to-agent:** when output goes to another agent rather than to me, return
-the parseable ```tldr``` block instead and write long output to a file.
+**Agent-to-agent:** when output goes to another agent rather than to me, the
+parseable ```tldr``` block is the whole response; if a long version was written
+to a file, `full:` carries its path.
 
 **Arguments:** `$ARGUMENTS`
 

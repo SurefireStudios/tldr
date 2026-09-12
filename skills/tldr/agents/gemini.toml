@@ -9,7 +9,7 @@ description = "Turn on TL;DR output, set the depth dial, or compress one target"
 prompt = """
 Apply the tldr contract to every response for the rest of this session: lead with
 a three-line TL;DR (what is true, what to do, what it costs), then the complete
-detail directly underneath. Never fold destructive actions, security findings,
-data loss, cost, or verbatim error text. When returning output to another agent,
-use the parseable tldr block and write long output to a file instead.
+detail directly underneath. Never fold destructive actions, security findings, data loss, money and quota, verbatim error text, diffs of code being changed, legal/medical/safety boundaries, and anything I asked to see in full.
+When returning output to another agent, the parseable tldr block is the whole
+response; if a long version was written to a file, full: carries its path.
 """

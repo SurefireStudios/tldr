@@ -290,7 +290,7 @@ Yes — 14 harnesses, listed above. The skill is plain markdown with no runtime,
 <details>
 <summary><strong>Is this safe to install? What does it run?</strong></summary>
 
-Nothing, by default. The skill is a single markdown file. The optional always-on hook is a ~30-line Node script that reads one file and prints it. Read [`skills/tldr/SKILL.md`](skills/tldr/SKILL.md) in two minutes and decide for yourself.
+Nothing, by default. The skill is two markdown files: a core under 5,000 characters that the model reads every time, and a reference it opens on demand. The optional always-on hook is a ~40-line Node script that reads the core and prints it. Read [`skills/tldr/SKILL.md`](skills/tldr/SKILL.md) in two minutes and decide for yourself.
 </details>
 
 <details>

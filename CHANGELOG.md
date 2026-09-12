@@ -11,6 +11,71 @@ release.
 
 ## [Unreleased]
 
+### Skill
+
+- **Split into a core and a reference.** `skills/tldr/SKILL.md` is now under
+  5,000 characters (was 18,000): the contract, the complete never-compress list,
+  both render shapes, six one-line rules, the agent-to-agent block and the
+  overrides. Everything else — reasoning, bad/good pairs, the depth dial table,
+  `/tldr <target>`, the full block field spec, worked examples — moved to
+  `skills/tldr/reference.md`, which the core links to and the model opens on
+  demand. Always-on harnesses re-send the core on every turn, so this cuts that
+  per-turn cost by roughly three quarters (Claude Code hook: 4,279 → 1,213 tokens).
+- The never-compress list now sits at 22% of the file instead of 29%, and its
+  items lost their bold labels: 2 bold phrases in the core, down from 46.
+- Every instruction about whether to act — "write it to a file", "confirm before
+  acting", "check the message before reaching for a tool" — is gone from the
+  core. The skill shapes what is written; the harness decides what is done. A
+  test pins this.
+- `full:` in the agent-to-agent block reads "path to the long version, if any";
+  every eval trial under the old wording wrote `full: none`.
+
+### Adapters
+
+- The three always-on hooks, the OpenCode plugin and the Pi/OMP extension name
+  the absolute path of `reference.md` in their header, since injected text has
+  no base directory to resolve a relative link against.
+- `scripts/check_mirrors.py` and the mirror-sync workflow cover both files.
+- Install routes that copy the skill folder use `cp -r`; the seven rules-file
+  routes (Copilot, Zed, Windsurf, Cline, Roo, Aider) note that they carry the
+  core only.
+- The `/tldr` command files and the Gemini prompt no longer say "write long
+  output to a file", and their never-fold lists match the core's eight items.
+
+### Evals
+
+- Resumption is skill-aware: a candidate row is only reused for the exact skill
+  text that produced it. Previously, rerunning after editing the skill would
+  have skipped every candidate row and reported the old numbers.
+- `run_full_eval.sh --out DIR`, so two models can run at once.
+- Corrected the record on `verbatim-error`: neither model echoes the exact
+  error code in either condition (0 of 12), so it is not a skill defect.
+
+## [0.2.0]
+
+### Skill
+
+- Rule 3, never assert more than you were given: one file shown is not a claim
+  about the repository.
+- Rule 4 hardened: never fabricate a tool call, its result, or a file that was
+  not written.
+- The detail continues the TL;DR instead of repeating it; short answers skip
+  the scaffolding entirely.
+- Every example and comment carried over from prior art replaced with original
+  material.
+
+### Evals
+
+- A runnable harness: baseline vs candidate, blind judge with permuted labels,
+  weighted rubric, release gate. Six runs published in `evals/RESULTS.md`,
+  including the four that failed the gate.
+- The skill is injected as a system instruction rather than into the user turn.
+- `scripts/measure_duplication.py`.
+
+### Launch
+
+- Self-referential star CTA; demo GIF generated from real eval output.
+
 ## [0.1.0]
 
 Initial release.

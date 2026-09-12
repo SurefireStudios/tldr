@@ -16,6 +16,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILL = REPO_ROOT / "skills" / "tldr" / "SKILL.md"
+REFERENCE = REPO_ROOT / "skills" / "tldr" / "reference.md"
 README = REPO_ROOT / "README.md"
 INSTALL = REPO_ROOT / "INSTALL.md"
 
@@ -166,6 +167,79 @@ class TestSkillContract(unittest.TestCase):
             with self.subTest(phrase=phrase):
                 self.assertIn(phrase, self.text, f"SKILL.md does not document {phrase!r}")
                 self.assertIn(phrase, extension, f"extensions/tldr.ts does not handle {phrase!r}")
+
+
+class TestCoreReferenceSplit(unittest.TestCase):
+    """SKILL.md is the core the model reads every turn; reference.md is the rest.
+
+    The core was 18k characters and 46 bold phrases before the split. Always-on
+    harnesses re-send it on every call, so its size is a per-turn tax on every
+    user. These bounds are the split's design constraints, pinned so the core
+    cannot regrow one "just one more rule" at a time.
+    """
+
+    CORE_MAX_CHARS = 5_000
+    MAX_BOLD = 10
+    MAX_NEVER = 10
+
+    def setUp(self) -> None:
+        self.core = SKILL.read_text(encoding="utf-8").replace("\r\n", "\n")
+
+    def test_reference_file_exists_and_is_linked_from_the_core(self) -> None:
+        self.assertTrue(REFERENCE.exists(), "skills/tldr/reference.md is missing")
+        self.assertIn(
+            "reference.md", self.core,
+            "the core must point at reference.md so on-demand loaders can find it",
+        )
+
+    def test_core_stays_under_the_size_budget(self) -> None:
+        self.assertLessEqual(
+            len(self.core), self.CORE_MAX_CHARS,
+            f"SKILL.md is {len(self.core)} chars; the budget is {self.CORE_MAX_CHARS}. "
+            "Move elaboration and examples to reference.md.",
+        )
+
+    def test_core_uses_emphasis_sparingly(self) -> None:
+        bold = re.findall(r"\*\*[^*\n]+\*\*", self.core)
+        self.assertLessEqual(
+            len(bold), self.MAX_BOLD,
+            f"{len(bold)} bold phrases; when everything is emphasised nothing is",
+        )
+
+    def test_core_does_not_lean_on_never(self) -> None:
+        nevers = re.findall(r"\bnever\b", self.core, flags=re.IGNORECASE)
+        self.assertLessEqual(
+            len(nevers), self.MAX_NEVER,
+            f"{len(nevers)} uses of 'never'; prefer stating what to do",
+        )
+
+    def test_core_lists_all_eight_never_compress_items(self) -> None:
+        section = self.core.split("## Never compress these", 1)[1].split("\n## ", 1)[0]
+        items = re.findall(r"(?m)^\s*\d+\.\s", section)
+        self.assertEqual(len(items), 8, "the never-compress list must ship complete in the core")
+
+    def test_core_does_not_instruct_actions(self) -> None:
+        """The skill shapes output. Whether to act is the harness's decision.
+
+        Every phrase here was in the 18k version and was either a tool-use policy
+        or an instruction to write files, which the eval could not exercise and
+        which the harness may forbid.
+        """
+        for phrase in (
+            "write it to a file",
+            "belongs in a file",
+            "confirm before acting",
+            "Check the message before reaching",
+        ):
+            with self.subTest(phrase=phrase):
+                # assertNotIn would print the whole 5k file on failure; keep it short.
+                self.assertFalse(phrase in self.core, f"core instructs an action: {phrase!r}")
+
+    def test_reference_does_not_redefine_the_contract(self) -> None:
+        """One source of truth for the rules that matter; the reference elaborates."""
+        reference = REFERENCE.read_text(encoding="utf-8")
+        self.assertNotIn("## Never compress these", reference)
+        self.assertNotIn("name: tldr", reference, "reference.md must not carry skill frontmatter")
 
 
 class TestMirrors(unittest.TestCase):

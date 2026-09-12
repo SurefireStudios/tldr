@@ -8,7 +8,7 @@ Three kinds of contribution are worth more than the rest. In order:
 
 ## Ground rules
 
-- `skills/tldr/SKILL.md` is the single source of truth. Change it first, then sync the mirrors.
+- `skills/tldr/` is the single source of truth: `SKILL.md` is the core the model reads every time (kept under 5,000 characters, enforced by a test), `reference.md` is the long form it opens on demand. Change them first, then sync the mirrors.
 - The never-compress list is load-bearing. Do not weaken it without an eval case proving the change is safe.
 - Keep the skill readable in two minutes. Its whole trust model is that a person can audit it before installing.
 - No runtime dependencies in the skill itself. It is markdown, and it stays markdown.
@@ -40,7 +40,7 @@ Run `python3 scripts/run_evals.py validate` after editing.
 2. Add an `## Agent Name` section to [`INSTALL.md`](INSTALL.md) with Install / Verify / Update / Uninstall / Always-on subsections, matching the existing ones.
 3. Add a row to the supported-agents table in [`README.md`](README.md), with an anchor link to your INSTALL.md section.
 4. Add the runtime to the entry-point table in [`AGENTS.md`](AGENTS.md).
-5. If the adapter copies the skill rather than reading it, add the copy to `MIRRORS` in [`scripts/check_mirrors.py`](scripts/check_mirrors.py) so it cannot drift.
+5. If the adapter copies the skill rather than reading it, add the copy's directory to `MIRROR_DIRS` in [`scripts/check_mirrors.py`](scripts/check_mirrors.py) so neither file can drift.
 
 `tests/test_repo_contract.py` checks that README links resolve to real INSTALL.md headings, so step 3 is enforced.
 
@@ -60,8 +60,8 @@ Translated READMEs live in `.github/readme/README.<locale>.md`, translated insta
 
 The skill is the product, so changes to it get the most scrutiny.
 
-1. Edit `skills/tldr/SKILL.md`.
-2. Sync the mirrors: `cp skills/tldr/SKILL.md .cursor/skills/tldr/SKILL.md`
+1. Edit `skills/tldr/SKILL.md` (the core) or `skills/tldr/reference.md` (the elaborations). A rule the model needs on every turn goes in the core; a reason, an example or a rarely used feature goes in the reference.
+2. Sync the mirrors: `cp skills/tldr/SKILL.md skills/tldr/reference.md .cursor/skills/tldr/`
 3. Run the tests: `python3 -m unittest discover -s tests -v`
 4. For anything that changes behaviour, run the evals and report the numbers.
 

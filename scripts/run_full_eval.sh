@@ -5,6 +5,8 @@
 #   scripts/run_full_eval.sh --smoke                # 2 cases, 1 trial, haiku
 #   scripts/run_full_eval.sh --runner claude-opus   # the expensive headline run
 #   scripts/run_full_eval.sh --trials 5
+#   scripts/run_full_eval.sh --out evals/results/run10-sonnet   # separate dir, so two
+#                                                              # models can run at once
 #
 # Every stage is resumable. If a stage fails partway, rerun the same command and
 # completed rows are skipped rather than repaid for.
@@ -22,7 +24,8 @@ while [ $# -gt 0 ]; do
     --runner) RUNNER="$2"; shift 2 ;;
     --trials) TRIALS="$2"; shift 2 ;;
     --limit)  LIMIT="--limit $2"; shift 2 ;;
-    -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --out)    OUT_DIR="$2"; shift 2 ;;
+    -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
 done

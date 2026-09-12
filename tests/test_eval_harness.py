@@ -97,6 +97,41 @@ class TestSystemPromptDelivery(unittest.TestCase):
         self.assertIn("the task", prompt)
 
 
+class TestResumeIsSkillAware(unittest.TestCase):
+    """Editing the skill between runs must never reuse the previous wording's rows.
+
+    The resume key used to be (case, trial, condition, runner). A second run with a
+    rewritten skill would have skipped every candidate row and measured nothing.
+    """
+
+    def test_candidate_rows_are_keyed_by_skill_digest(self) -> None:
+        import json
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "responses.jsonl"
+            old_sha = run_evals.instruction_digest("OLD SKILL")
+            path.write_text(
+                json.dumps({"case_id": "c", "trial": 1, "condition": "candidate",
+                            "runner": "claude", "skill_sha": old_sha, "response": "x"}) + "\n"
+                + json.dumps({"case_id": "c", "trial": 1, "condition": "baseline",
+                              "runner": "claude", "skill_sha": "", "response": "y"}) + "\n"
+                + json.dumps({"case_id": "legacy", "trial": 1, "condition": "candidate",
+                              "runner": "claude", "response": "z"}) + "\n",
+                encoding="utf-8",
+            )
+            done = run_evals.completed_rows(path)
+
+        new_sha = run_evals.instruction_digest("NEW SKILL")
+        self.assertIn(("c", 1, "candidate", "claude", old_sha), done)
+        self.assertNotIn(("c", 1, "candidate", "claude", new_sha), done,
+                         "a rewritten skill must not inherit the old skill's rows")
+        self.assertIn(("c", 1, "baseline", "claude", ""), done, "baseline rows carry no digest")
+        self.assertIn(("legacy", 1, "candidate", "claude", ""), done,
+                      "a pre-digest row resumes only for an empty digest, i.e. never for a candidate")
+        self.assertEqual(run_evals.instruction_digest(""), "")
+
+
 class TestFabricationDetector(unittest.TestCase):
     """The detector is a published gate metric; its false-positive boundary matters."""
 

@@ -27,6 +27,9 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const skillsDir = path.resolve(__dirname, '../../skills');
 const skillPath = path.join(skillsDir, 'tldr', 'SKILL.md');
+// The skill body links to this by relative path. On the always-on path the body
+// is injected as text with no base directory, so the header names the absolute path.
+const referencePath = path.join(skillsDir, 'tldr', 'reference.md');
 const commandPath = path.join(__dirname, '..', 'command', 'tldr.md');
 
 const VALID_DEPTHS = new Set(['0', '1', '3', '5']);
@@ -100,11 +103,20 @@ export default async () => {
       let body;
       try { body = rulesetBody(); } catch (e) { return; }
 
+      let referenceNote = '';
+      try {
+        if (fs.existsSync(referencePath)) {
+          referenceNote =
+            ' The reference.md the rules link to is at ' + referencePath +
+            '; read it only when a rule points you there.';
+        }
+      } catch (e) {}
+
       const header =
         'TLDR MODE ACTIVE (always-on). The ruleset below applies to every response. ' +
         'Depth dial is set to ' + configuredDepth() + '. ' +
         '"stop tldr" or "normal mode" turns it off for this session; remove ' +
-        flagPath + ' to stop it loading at startup.';
+        flagPath + ' to stop it loading at startup.' + referenceNote;
 
       const injected = header + '\n\n' + body;
 

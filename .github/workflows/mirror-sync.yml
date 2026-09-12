@@ -1,8 +1,9 @@
 name: Sync skill mirrors
 
-# `skills/tldr/SKILL.md` is the single source of truth. Harnesses that cannot read
-# from that path get a copy, and a copy that drifts is worse than no copy: two
-# harnesses would follow two different rulesets while both claiming to run tldr.
+# `skills/tldr/` is the single source of truth: SKILL.md is the core, reference.md
+# the long form it links to. Harnesses that cannot read from that path get a copy,
+# and a copy that drifts is worse than no copy: two harnesses would follow two
+# different rulesets while both claiming to run tldr.
 #
 # CI fails a pull request whose mirrors have drifted. This workflow fixes the
 # common case automatically after a merge, so contributors editing the canonical
@@ -13,6 +14,7 @@ on:
     branches: [main]
     paths:
       - "skills/tldr/SKILL.md"
+      - "skills/tldr/reference.md"
   workflow_dispatch:
 
 permissions:
@@ -29,6 +31,7 @@ jobs:
         run: |
           mkdir -p .cursor/skills/tldr
           cp skills/tldr/SKILL.md .cursor/skills/tldr/SKILL.md
+          cp skills/tldr/reference.md .cursor/skills/tldr/reference.md
 
       - name: Verify
         run: python3 scripts/check_mirrors.py
@@ -41,6 +44,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .cursor/skills/tldr/SKILL.md
-          git commit -m "chore: sync skill mirrors with canonical SKILL.md"
+          git add .cursor/skills/tldr/SKILL.md .cursor/skills/tldr/reference.md
+          git commit -m "chore: sync skill mirrors with canonical skills/tldr"
           git push
