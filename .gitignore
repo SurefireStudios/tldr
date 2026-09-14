@@ -13,3 +13,6 @@ __pycache__/
 *.pyc
 .venv/
 .env
+
+# Working notes, drafts and announcement copy. Local only, not part of the product.
+launch/

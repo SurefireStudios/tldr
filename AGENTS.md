@@ -41,7 +41,6 @@ Agents can access the complete project by reading repository-relative files afte
 | Documentation | `README.md`, `INSTALL.md`, `.github/readme/` | The pitch, the per-harness setup, and the translations. |
 | Verification | `tests/`, `scripts/` | Unit tests, mirror checks, and evaluation tooling. |
 | Evaluation | `evals/` | Cases, rubric, release gate, and published results. |
-| Launch assets | `launch/` | Announcement copy and the launch checklist. |
 
 ## Runtime entry points
 
