@@ -211,25 +211,26 @@ The governing rule, in the skill's own words: *a reader who reads only the TL;DR
 
 ## Does it actually work?
 
-Measured on 16 cases × 3 trials, blind-graded against a no-skill baseline, on two models with the same instrument. This is the shipped skill (v0.3.0):
+Measured on 16 cases × 3 trials, blind-graded against a no-skill baseline, on two models with the same instrument. This is the shipped skill (v0.4.0), runs 16 and 17:
 
 | | Sonnet | | Opus | |
 | --- | ---: | --- | ---: | --- |
-| Correctness | 4.854 → **4.938** | +0.083 | 4.792 → **4.917** | +0.125 |
-| Fidelity | 4.583 → **4.792** | +0.208 | 4.625 → **4.729** | +0.104 |
-| Actionability | 4.396 → **4.750** | +0.354 | 4.396 → **4.875** | +0.479 |
-| Safety | 4.604 → **4.750** | +0.146 | 4.562 → **4.896** | +0.333 |
-| Concision | 4.062 → **4.250** | +0.188 | 3.938 → **4.542** | +0.604 |
+| Correctness | 4.896 → **4.938** | +0.042 | 4.708 → **4.875** | +0.167 |
+| Fidelity | 4.583 → **4.854** | +0.271 | 4.667 → **4.854** | +0.188 |
+| Actionability | 4.417 → **4.875** | +0.458 | 4.500 → **4.833** | +0.333 |
+| Safety | 4.458 → **4.750** | +0.292 | 4.542 → **4.896** | +0.354 |
+| Concision | 4.083 → **4.333** | +0.250 | 3.938 → **4.562** | +0.625 |
 | Fabricated tool calls | 0/48 → **0/48** | | 0/48 → **0/48** | |
-| Agent-to-agent output tokens | 194 → **122** | −37% | 337 → **139** | −59% |
-| Human-facing output tokens, median | 311 → **269** | −13% | 455 → **258** | −43% |
-| Human-facing output tokens, mean | 336 → 372 | +11% | 529 → 558 | +5% |
+| Agent-to-agent output tokens | 172 → **105** | −39% | 320 → **137** | −57% |
+| Human-facing output tokens, mean | 346 → 374 | +8% | 535 → 555 | +4% |
 | Skill tokens per always-on turn | 4,380 → **1,078** | −75% | 4,380 → **1,078** | −75% |
 
 Better on every dimension, on both models, and **the release gate passes 5 of 5 on both.** Read the token rows carefully, because they are not the story a compression skill is expected to tell:
 
 - **Where the skill compresses — agent-to-agent reports — output falls by a third to a half.** That is the headline feature and it is where the saving lives.
-- **Where the skill refuses to compress — destructive actions, security findings, cost, errors — output gets longer**, because the model now keeps every caveat above the fold instead of thinning it. Those cases are why the human-facing *mean* went up while the *median* went down. Every one of them scored higher on fidelity or safety.
+- **Where the skill refuses to compress — destructive actions, security findings, cost, errors — output gets longer**, because the model now keeps every caveat above the fold instead of thinning it. Every one of those cases scored higher on fidelity or safety. That is the trade, and it is why the human-facing *mean* rises rather than falls.
+- **The median is not quoted here, deliberately.** Earlier versions of this table published a −13% median on Sonnet. Re-running the same skill, two lines different, produced +15% — a sign flip. Per-case figures show the movement is diffuse, not concentrated: at 48 rows the median is about one case's variance wide. The mean has held its sign and rough magnitude across six runs on two models; the median has not, so it is in [`evals/RESULTS.md`](evals/RESULTS.md) with that caveat attached rather than on this table.
+- **The per-turn cost is unchanged from v0.3.0.** The v0.4.0 core is ten characters larger than the v0.3.0 core — 4,995 against 4,985 — so the row above still describes it. Measured with `cl100k_base` for a like-for-like check: 1,059 body tokens to 1,077, +1.7%.
 - **The biggest number is the skill's own size.** An always-on harness re-sends the skill on every turn; the old 18k version cost roughly 80× per turn what it saved in output. The core is a quarter of that.
 
 The gate result carries one caveat: Sonnet's "no blockers" rule passed because the judge did not escalate a `pg_dump` fact error that Sonnet makes in 5 of 6 responses *with or without the skill*; in the previous run it did. Both runs are in the file.

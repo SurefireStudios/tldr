@@ -11,6 +11,8 @@ release.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-16
+
 ### Skill
 
 - **Brief mode: `/tldr brief`.** Holds the detail back until the reader asks for
@@ -31,6 +33,23 @@ release.
 
 - The depth dial gains a `/tldr brief` row in the README, all four translations,
   and `reference.md`, which carries the full mechanics.
+
+### Evaluation
+
+- Runs 16 and 17 are the shipped numbers: release gate **PASSED 5 of 5 on both
+  models**. Weighted +0.241 on Sonnet and +0.279 on Opus, both better than v0.3.0's
+  +0.189 and +0.270. Zero fabricated tool calls on all four conditions.
+- Runs 14 and 15 also passed, but measured a regression introduced while making room
+  for the new sentence: rewriting the terminal-shape paragraph turned a judgement
+  about when *not* to impose structure into an instruction to always emit it. The
+  `trivial-answer` median went 47 → 331 characters. The paragraph was restored
+  verbatim and the characters taken from the frontmatter `description` instead. Both
+  pairs of runs are published in `evals/RESULTS.md`.
+- **The median token figure is withdrawn as a headline claim.** v0.3.0 published
+  311 → 269 (−13.3%) on Sonnet; the same skill, two lines different, gives
+  277 → 318 (+14.8%). At 48 rows the median is about one case's variance wide. The
+  mean has held its sign and rough magnitude across six runs on two models and is
+  the number now published; the median stays in `RESULTS.md` with the caveat.
 
 ## [0.3.0] - 2026-09-12
 

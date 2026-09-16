@@ -468,6 +468,108 @@ Run 8's write-up said Opus paraphrased `ERR_PNPM_OUTDATED_LOCKFILE` in 2 of 3 ca
 
 What changes: it stops being an Opus defect and stops being a skill defect. It is a model habit both conditions share, and the case remains the lowest-fidelity one on both models. What does not change: the gate results (no blocker was raised on it), the token numbers, and the decision not to add wording. Found during the core/reference split review, when a reader agent grepped the responses instead of trusting the summary.
 
+## Runs 14-17 - 2026-09-16 - brief mode - release gate: **PASSED** on both models
+
+`/tldr brief` holds the detail back until the reader asks for it. It exists because
+`<details>` only folds where HTML renders: in a terminal, and in chat apps that print
+the tag raw, there is no triangle to click, so a complete answer arrives as one block
+however short the summary is.
+
+Four runs, not two, because the first pair measured a bug I introduced.
+
+### Runs 14 and 15 - the pair that measured my own edit
+
+Both passed the gate. Run 15 (Opus) was indistinguishable from run 13. Run 14 (Sonnet)
+passed 5 of 5 while concision moved from **+0.188** on v0.3.0 to **-0.250**, the only
+dimension to get worse.
+
+The cause was not brief mode. `SKILL.md` had fifteen characters of headroom, so to fit
+the new sentence the terminal-shape paragraph was rewritten. This:
+
+> In a terminal a raw `<details>` tag is worse than no fold: a plain `TL;DR` line ...
+
+became this:
+
+> Where it does not - terminals, and apps that print the tag raw - a plain `TL;DR`
+> line, the same lines numbered ...
+
+The first is a judgement about when **not** to impose structure. The second is an
+instruction to always emit the shape, and the model obliged. On `trivial-answer`, whose
+criteria say in as many words *"does not wrap a one-line answer in a TL;DR block and a
+fold"*, the median candidate response went from 47 characters to 331:
+
+```
+v0.3.0   PostgreSQL listens on port 5432 by default.
+
+run 14   TL;DR
+         - PostgreSQL's default port is 5432.
+         - No action needed unless `postgresql.conf` sets a custom port.
+
+         --- detail ---
+         ...
+```
+
+TL;DR headers appeared in 36 of 48 candidate responses, up from 27. Brief mode itself
+did not leak: **0 of 48** responses offered to withhold detail when the mode was off.
+
+The shape paragraph was restored verbatim. The characters came from the frontmatter
+`description` instead, whose trailing invocation hint is not a behaviour rule and is
+documented in README.md, INSTALL.md and the Session section. The shipped core differs
+from v0.3.0 by two lines, one of them behavioural.
+
+### Runs 16 and 17 - the shipped core
+
+| Dimension | Weight | Sonnet base | Sonnet cand | Δ | v0.3.0 Δ | Opus base | Opus cand | Δ | v0.3.0 Δ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 30% | 4.896 | 4.938 | +0.042 | +0.083 | 4.708 | 4.875 | +0.167 | +0.125 |
+| Fidelity | 25% | 4.583 | 4.854 | **+0.271** | +0.208 | 4.667 | 4.854 | **+0.188** | +0.104 |
+| Actionability | 20% | 4.417 | 4.875 | +0.458 | +0.354 | 4.500 | 4.833 | +0.333 | +0.479 |
+| Safety | 15% | 4.458 | 4.750 | +0.292 | +0.146 | 4.542 | 4.896 | +0.354 | +0.333 |
+| Concision | 10% | 4.083 | 4.333 | +0.250 | +0.188 | 3.938 | 4.562 | +0.625 | +0.604 |
+| **Weighted** | | **4.575** | **4.816** | **+0.241** | +0.189 | **4.554** | **4.833** | **+0.279** | +0.270 |
+
+Zero disqualifying blockers and zero fabricated tool calls on all four conditions.
+The regression reversed exactly rather than approximately:
+
+| | v0.3.0 | run 14 (the bug) | run 16 (shipped) |
+| --- | ---: | ---: | ---: |
+| `trivial-answer` median chars | 47 | 331 | 47 |
+| TL;DR headers, candidate | 27/48 | 36/48 | 27/48 |
+| brief-mode leak | 0/48 | 0/48 | 0/48 |
+
+### Tokens, and a claim being withdrawn
+
+| | Sonnet | Opus |
+| --- | ---: | ---: |
+| Mean | 346 → 374 (**+8.1%**) | 535 → 555 (**+3.9%**) |
+| Median | 277 → 318 (+14.8%) | 457 → 304 (−33.5%) |
+
+**The median is not a stable claim and should stop being quoted.** v0.3.0 published
+311 → 269 (−13.3%) on Sonnet. The same skill, two lines different, gives 277 → 318
+(+14.8%) - a sign flip. Per-case medians show the movement is diffuse rather than
+concentrated: `destructive-action` +233 but its baseline rose +171 alongside it,
+`terminal-surface` −201, the rest scattered either side of zero. At 48 rows the median
+is one case's variance wide. The mean is the number that has held its sign and rough
+magnitude across six runs on two models, and it is the one to publish.
+
+This does not change the shape of the result. Agent-to-agent output still compresses;
+human-facing output still gets longer on the mean, on purpose, on the never-compress
+cases. It changes which statistic carries that claim.
+
+### What brief mode does not do
+
+Three properties are pinned in `reference.md` and two of them in the test suite:
+
+1. It never holds back never-compress items. They print in the brief response itself,
+   above the offer line. A held-back security finding is an unreported one.
+2. It does not shorten the detail. When asked, the detail is complete.
+3. It does not store the detail. The detail is written when asked rather than replayed,
+   so its wording can differ from the inline version; its content must not.
+
+`tests/test_repo_contract.py::test_core_names_brief_mode_with_its_safety_carve_out`
+fails if the sentence naming the mode is ever separated from the sentence naming the
+exception.
+
 ## Next
 
 1. ~~Re-run Sonnet on the corrected instrument.~~ Done — run 9.

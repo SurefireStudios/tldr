@@ -165,20 +165,19 @@ Há um arcabouço de avaliação reproduzível em [`evals/`](../../evals/) que m
 - **Qualidade** — correção, fidelidade, acionabilidade e segurança, avaliadas às cegas contra uma linha de base.
 - **Tokens** — contagem real de tokens de saída, porque o objetivo da compressão é custo.
 
-Medido em 16 casos × 3 tentativas, avaliado às cegas contra uma linha de base sem skill, em dois modelos com o mesmo instrumento. Esta é a skill publicada (v0.3.0):
+Medido em 16 casos × 3 tentativas, avaliado às cegas contra uma linha de base sem skill, em dois modelos com o mesmo instrumento. Esta é a skill publicada (v0.4.0):
 
 | | Sonnet | | Opus | |
 | --- | ---: | --- | ---: | --- |
-| Correção | 4.854 → **4.938** | +0.083 | 4.792 → **4.917** | +0.125 |
-| Fidelidade | 4.583 → **4.792** | +0.208 | 4.625 → **4.729** | +0.104 |
-| Acionabilidade | 4.396 → **4.750** | +0.354 | 4.396 → **4.875** | +0.479 |
-| Segurança | 4.604 → **4.750** | +0.146 | 4.562 → **4.896** | +0.333 |
-| Tokens de saída agente-a-agente | 194 → **122** | −37% | 337 → **139** | −59% |
-| Tokens de saída para humanos, mediana | 311 → **269** | −13% | 455 → **258** | −43% |
-| Tokens de saída para humanos, média | 336 → 372 | +11% | 529 → 558 | +5% |
+| Correção | 4.896 → **4.938** | +0.042 | 4.708 → **4.875** | +0.167 |
+| Fidelidade | 4.583 → **4.854** | +0.271 | 4.667 → **4.854** | +0.188 |
+| Acionabilidade | 4.417 → **4.875** | +0.458 | 4.500 → **4.833** | +0.333 |
+| Segurança | 4.458 → **4.750** | +0.292 | 4.542 → **4.896** | +0.354 |
+| Tokens de saída agente-a-agente | 172 → **105** | −39% | 320 → **137** | −57% |
+| Tokens de saída para humanos, média | 346 → 374 | +8% | 535 → 555 | +4% |
 | Tokens da própria skill por turno (sempre ativa) | 4,380 → **1,078** | −75% | 4,380 → **1,078** | −75% |
 
-Melhor em todas as dimensões, nos dois modelos, e **o critério de publicação passa nas cinco regras em ambos**. Leia as linhas de tokens com atenção: onde a skill comprime — relatórios agente-a-agente — a saída cai entre um terço e a metade. Onde ela se recusa a comprimir — ações destrutivas, achados de segurança, custo, erros — a saída fica mais longa, porque o modelo agora mantém cada ressalva acima da dobra em vez de afiná-la; é por isso que a média sobe enquanto a mediana cai, e cada um desses casos pontuou mais alto em fidelidade ou segurança. O maior número é o tamanho da própria skill: um harness sempre ativo a reenvia a cada turno, e a versão anterior de 18k custava cerca de 80 vezes por turno o que economizava.
+Melhor em todas as dimensões, nos dois modelos, e **o critério de publicação passa nas cinco regras em ambos**. Leia as linhas de tokens com atenção: onde a skill comprime — relatórios agente-a-agente — a saída cai entre um terço e a metade. Onde ela se recusa a comprimir — ações destrutivas, achados de segurança, custo, erros — a saída fica mais longa, porque o modelo agora mantém cada ressalva acima da dobra em vez de afiná-la; é por isso que a média sobe, e cada um desses casos pontuou mais alto em fidelidade ou segurança. A mediana não é publicada aqui: entre duas execuções da mesma skill ela inverteu de sinal, então com 48 linhas não é um número estável. O maior número é o tamanho da própria skill: um harness sempre ativo a reenvia a cada turno, e a versão anterior de 18k custava cerca de 80 vezes por turno o que economizava.
 
 Foram treze execuções, incluindo as que falharam e uma em que o erro estava no meu próprio harness. Metodologia, critérios e as treze em [`evals/RESULTS.md`](../../evals/RESULTS.md). Os números são publicados independentemente de favorecerem a skill.
 
