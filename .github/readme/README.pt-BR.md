@@ -94,8 +94,17 @@ Você decide quanto fica acima da dobra.
 | `/tldr 3` | **Padrão.** Três linhas, depois o detalhe. |
 | `/tldr 5` | Cinco linhas, depois o detalhe. |
 | `/tldr full` | Desligado. De volta ao normal. |
+| `/tldr brief` | Segura o detalhe até você pedir. Combina com qualquer profundidade. |
 
 O seletor muda o tamanho do resumo. Nunca enxuga o detalhe.
+
+### Modo breve
+
+`<details>` só dobra onde o HTML é renderizado. No terminal, e em alguns apps de chat, não há triângulo para clicar: a resposta completa chega como um bloco, por menor que seja o resumo.
+
+`/tldr brief` é a dobra que essas superfícies não conseguem desenhar. O TL;DR aparece; o detalhe espera. Diga `more` e você recebe o detalhe na íntegra, não uma versão encurtada. `/tldr detail` desliga.
+
+O que ele nunca faz: **segurar qualquer coisa da lista de "nunca comprimir"**. Comandos destrutivos, achados de segurança, custo, erros literais e diffs aparecem na própria resposta breve. Um achado de segurança segurado é um achado não reportado.
 
 ## `/tldr` também é um verbo
 

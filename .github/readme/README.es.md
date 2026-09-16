@@ -94,8 +94,17 @@ Tú decides cuánto queda por encima del pliegue.
 | `/tldr 3` | **Por defecto.** Tres líneas, luego el detalle. |
 | `/tldr 5` | Cinco líneas, luego el detalle. |
 | `/tldr full` | Desactivado. Vuelta a lo normal. |
+| `/tldr brief` | Retiene el detalle hasta que lo pidas. Se combina con cualquier profundidad. |
 
 El dial cambia el tamaño del resumen. Nunca adelgaza el detalle.
+
+### Modo breve
+
+`<details>` solo se pliega donde se renderiza HTML. En una terminal, y en algunas apps de chat, no hay triángulo que pulsar: la respuesta completa llega como un bloque, por corto que sea el resumen.
+
+`/tldr brief` es el pliegue que esas superficies no pueden dibujar. El TL;DR se imprime; el detalle espera. Di `more` y recibes el detalle íntegro, no una versión recortada. `/tldr detail` lo desactiva.
+
+Lo que nunca hace: **retener nada de la lista de «nunca comprimir»**. Comandos destructivos, hallazgos de seguridad, coste, errores textuales y diffs se imprimen en la propia respuesta breve. Un hallazgo de seguridad retenido es un hallazgo no reportado.
 
 ## `/tldr` también es un verbo
 

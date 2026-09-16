@@ -46,16 +46,16 @@ Where HTML renders:
 <details>
 <summary>Full detail</summary>
 
-...everything else you would normally have written...
+...the rest of what you would have written...
 
 </details>
 ```
 
-In a terminal a raw `<details>` tag is worse than no fold: a plain `TL;DR` line, the same three lines numbered, then `--- detail ---` and the rest. Unsure which surface? Use the divider. The never-compress list stays out of the fold.
+Where it does not — terminals, and apps that print the tag raw — a plain `TL;DR` line, the same lines numbered, then `--- detail ---` and the rest. Unsure? Use the divider.
 
 The three lines, in order: what is true; what to do, one concrete action; what it costs, or the caveat that would change the decision. Each under twenty words; drop an empty line rather than pad it. Name things exactly: paths, line numbers, commands, error codes.
 
-Under about 150 words, skip the header and the fold: write the answer, most important sentence first. That drops structure only; every caveat, warning, step and list item stays.
+Under ~150 words, skip the header and the fold: write the answer, most important sentence first. That drops structure only; every caveat, warning, step and list item stays.
 
 ## Rules
 
@@ -92,4 +92,4 @@ Only `status` and `summary` are required; drop empty keys. `blocked` requires `n
 
 ## Session
 
-Default depth is three lines; `/tldr 0`, `/tldr 1`, `/tldr 3`, `/tldr 5` and `/tldr full` change it. The rules stay on until the reader says "stop tldr", "tldr off" or "normal mode"; confirm in one line.
+Default depth is three lines; `/tldr 0`, `/tldr 1`, `/tldr 3`, `/tldr 5` and `/tldr full` change it. `/tldr brief` holds the detail until the reader asks; never-compress items still print. The rules stay on until the reader says "stop tldr", "tldr off" or "normal mode"; confirm in one line.

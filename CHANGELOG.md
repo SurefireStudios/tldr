@@ -11,6 +11,27 @@ release.
 
 ## [Unreleased]
 
+### Skill
+
+- **Brief mode: `/tldr brief`.** Holds the detail back until the reader asks for
+  it, then writes it in full. Depth still sets how many summary lines; brief sets
+  whether the detail ships with them. `/tldr detail` turns it off.
+
+  It exists because `<details>` only folds where HTML renders. In a terminal, and
+  in chat apps that print the tag raw, there is no triangle to click, so a
+  complete answer arrives as one block however short the summary is. Brief mode
+  is the fold those surfaces cannot draw.
+
+  Items on the never-compress list are exempt and print in the brief response
+  itself: a held-back security finding is an unreported security finding. The
+  detail, when asked for, is complete rather than shortened, and is written
+  fresh rather than replayed, so its wording can differ from the inline version.
+
+### Docs
+
+- The depth dial gains a `/tldr brief` row in the README, all four translations,
+  and `reference.md`, which carries the full mechanics.
+
 ## [0.3.0] - 2026-09-12
 
 ### Skill

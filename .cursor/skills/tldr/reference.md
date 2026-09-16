@@ -44,8 +44,38 @@ The reader sets depth. Default is 3.
 | `/tldr 3` | Default. Three lines, then the detail. |
 | `/tldr 5` | Five lines, then the detail. For multi-part or multi-file work. |
 | `/tldr full` | Off. Return to default style. |
+| `/tldr brief` | Holds the detail back until the reader asks. Composes with any depth above. |
 
 The dial changes the size of the TL;DR. It does not change what goes in the detail: the detail is complete at every setting except `0`.
+
+### Brief mode
+
+`/tldr brief` is the second axis. Depth sets how many summary lines; brief decides whether the detail ships with them or waits to be asked for.
+
+- `/tldr brief` turns it on and keeps the current depth.
+- `/tldr detail` turns it off: back to the detail inline.
+- `/tldr full` turns the whole skill off, as always.
+
+A brief response is the TL;DR, then anything on the never-compress list, then one closing line offering the rest:
+
+```markdown
+**TL;DR**
+- `listOrders` queries the customer table per row: 241 queries per page.
+- Fix: `include: { customer: true }` at `src/orders/repository.ts:88`.
+- ~10 minutes; the orders benchmark covers this path.
+
+Say "more" for the full detail.
+```
+
+When the reader asks — "more", "expand", "full detail", or a follow-up question about the same answer — write the detail for that answer, complete, exactly as it would have appeared inline.
+
+Three things brief mode does not do:
+
+1. **It does not hold back anything on the never-compress list.** Destructive actions, security findings, irreversibility and data loss, money and quota, verbatim error text, diffs, legal and medical boundaries, and anything the reader asked to see in full: all of it prints in the brief response, above the offer line. A held-back security finding is an unreported security finding. Never-compress material is not "detail", so brief mode never reaches it.
+2. **It does not shorten the detail.** When the reader asks, the detail is complete: reasoning, alternatives, caveats. Brief changes when the detail arrives, not how much of it there is.
+3. **It does not store the detail.** The detail is written when asked, not replayed from a buffer, so its wording can differ from the version that would have appeared inline. Its content must not.
+
+Why it exists: where `<details>` does not render — most terminals, and some chat apps — there is no triangle to click, so a complete answer lands as one long block whatever the depth. Brief mode is the fold those surfaces cannot draw. On a surface that does render `<details>`, prefer the fold: it costs the reader one click instead of one turn.
 
 ## 4. `/tldr` as a verb
 

@@ -643,6 +643,7 @@ git clone https://github.com/SurefireStudios/tldr.git ~/.pi/packages/tldr
 /tldr          toggle
 /tldr 1        one-line summaries
 /tldr 5        five-line summaries
+/tldr brief    summary only; say "more" for the detail
 /tldr off      back to normal
 ```
 

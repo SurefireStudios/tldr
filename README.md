@@ -134,6 +134,25 @@ You set how much lands above the fold.
 
 The dial resizes the summary. It never thins the detail.
 
+### Brief mode
+
+`<details>` folds only where HTML renders. In a terminal, and in some chat apps, there is no triangle to click — so a complete answer lands as one block however small the summary is.
+
+`/tldr brief` is the fold those surfaces cannot draw. The TL;DR prints, the detail waits:
+
+```
+**TL;DR**
+- `listOrders` queries the customer table per row: 241 queries per page.
+- Fix: `include: { customer: true }` at `src/orders/repository.ts:88`.
+- ~10 minutes; the orders benchmark covers this path.
+
+Say "more" for the full detail.
+```
+
+Say `more` and you get the detail in full — complete, not a shortened version. `/tldr detail` turns it back off.
+
+One thing it will not do: **hold back anything on the never-compress list.** Destructive commands, security findings, cost, verbatim errors and diffs print in the brief response itself. A held-back security finding is an unreported one.
+
 ## `/tldr` is also a verb
 
 Turn it on as a mode, or fire it once at a specific thing:

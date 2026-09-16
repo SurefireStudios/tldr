@@ -235,11 +235,42 @@ class TestCoreReferenceSplit(unittest.TestCase):
                 # assertNotIn would print the whole 5k file on failure; keep it short.
                 self.assertFalse(phrase in self.core, f"core instructs an action: {phrase!r}")
 
+    def test_core_names_brief_mode_with_its_safety_carve_out(self) -> None:
+        """Brief mode withholds the detail, so the carve-out has to travel with it.
+
+        `/tldr brief` is the only setting that removes the detail from the
+        response the reader first sees. If the core names the mode without
+        naming the exception, a model reading only the core can withhold a
+        security finding and still believe it followed the skill.
+        """
+        session = self.core.split("## Session", 1)[1]
+        self.assertIn("/tldr brief", session, "the core must name brief mode in Session")
+        flat = " ".join(session.split())
+        sentence = next(s for s in flat.split(".") if "/tldr brief" in s)
+        self.assertIn(
+            "never-compress", sentence,
+            "the sentence introducing brief mode must carry the never-compress carve-out; "
+            "a reader of the core alone must not learn to withhold a security finding",
+        )
+
     def test_reference_does_not_redefine_the_contract(self) -> None:
         """One source of truth for the rules that matter; the reference elaborates."""
         reference = REFERENCE.read_text(encoding="utf-8")
         self.assertNotIn("## Never compress these", reference)
         self.assertNotIn("name: tldr", reference, "reference.md must not carry skill frontmatter")
+
+    def test_reference_documents_brief_mode_in_full(self) -> None:
+        """The core gets one sentence; the mechanics live here."""
+        reference = REFERENCE.read_text(encoding="utf-8")
+        self.assertIn("### Brief mode", reference)
+        for required in (
+            "/tldr detail",          # the off-switch
+            "does not hold back",    # the never-compress carve-out
+            "does not shorten",      # the detail stays complete when asked
+            "does not store",        # it is regenerated, not replayed
+        ):
+            with self.subTest(required=required):
+                self.assertIn(required, reference, f"brief mode section is missing {required!r}")
 
 
 class TestMirrors(unittest.TestCase):
