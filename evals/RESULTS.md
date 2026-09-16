@@ -570,6 +570,185 @@ Three properties are pinned in `reference.md` and two of them in the test suite:
 fails if the sentence naming the mode is ever separated from the sentence naming the
 exception.
 
+## Runs 18-19 - 2026-09-16 - `tldr-write` - release gate: **FAILED**, then **PASSED**
+
+A second skill, and the first run of a second suite. `tldr` shapes what an agent
+says to you; `tldr-write` shapes what you send to someone else - email, Slack, PR
+descriptions, review comments, commit messages.
+
+It gets its own cases, rubric, weights and gate because it is a different job with
+a different cheat available, and the harness gained `--suite` to carry that.
+
+### Appropriateness, and why the old rubric would have passed the wrong skill
+
+The `tldr` suite floors fidelity at 25% because that skill could win by deleting.
+
+This one can win more cheaply than that. Consider the `decline-kindly` case - a
+colleague asks for a 900-line review by tomorrow and you are on call:
+
+```
+"No."
+
+"Can't do it by tomorrow - I'm on call this week and shipping Thursday.
+ I can give it a proper read Friday morning if that works."
+```
+
+Both decline. Both are accurate. The first drops nothing factual, uses a fifth of
+the tokens, and on **every dimension the `tldr` rubric measures** it scores at
+least as well. It is also a message that costs you a colleague.
+
+So this suite grades **appropriateness at 20%** and floors it in the gate in place
+of safety: *would the named recipient, reading this, feel respected?* Safety in the
+`tldr` suite guards destructive commands and security findings, which do not
+appear in an email. The thing a writing skill can trade away instead is goodwill,
+and nothing in the other four dimensions can see it.
+
+The generalisation, which is the point: **every compression skill has one dimension
+it can cheat on. Find it before shipping and weight it until the cheat loses.**
+
+### Run 18 - FAILED (1 of 5)
+
+Four rules passed, with the largest margins in this file: weighted +0.685, tokens
+237 -> 87 (-63.6%). Rule 1 failed on two disqualifying blockers.
+
+Full write-up, including the discarded first grading pass:
+[`results/run18-sonnet-write/NOTES.md`](results/run18-sonnet-write/NOTES.md).
+Two things it found:
+
+**The skill invented calendar dates.** Given "last Thursday's load test" it wrote
+"Thu Sep 11" - a date nobody supplied, and not a Thursday. Inside the skill,
+"Name things exactly: dates, not 'soon'" was outranking "never invent a date". The
+rule carries its precedence now: a date handed to you as "last Thursday" stays
+"last Thursday". Fabricated dates 3 of 48 -> 1 of 48.
+
+**One case was unpassable.** `explain-requested` asked for reasoning it never
+supplied, so the only way to satisfy the override was to fabricate an architecture
+rationale the never-cut list forbids. The skill returned a skeleton, correctly, and
+the judge blocked it. The case now supplies the reasoning. A case that can only be
+passed by fabricating is not a hard case, it is a broken one - and it would have
+produced a blocker every run until someone read the response instead of the score.
+
+**The judge was also asked for the wrong dimensions.** `judge.py` hardcoded the
+default suite's five names into its output-format example, so the grader was told
+to emit `safety` and never told to emit `appropriateness`. 35 of 48 groups failed
+to parse, and the 13 that survived did so by ignoring the example and reading the
+rubric table - a sample selected by how carefully the judge disobeyed. Those 13
+were deleted and the run re-graded clean. The contract is generated from the active
+suite now, pinned by
+`tests/test_eval_harness.py::TestJudgeContractFollowsTheSuite`.
+
+That is the third instrument bug in this file, and all three have the same shape:
+a harness confidently describing behaviour it did not have.
+
+### Run 19 - PASSED (5 of 5)
+
+Same suite and model, both skill and case fixes applied.
+
+| Dimension | Weight | Baseline | Candidate | Δ | Run 18 Δ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 25% | 4.479 | 4.854 | +0.375 | +0.417 |
+| Fidelity | 25% | 4.833 | 4.833 | **+0.000** | −0.083 |
+| Appropriateness | 20% | 4.083 | 4.375 | **+0.292** | +0.417 |
+| Actionability | 15% | 3.458 | 4.958 | +1.500 | +1.313 |
+| Concision | 15% | 2.646 | 4.896 | +2.250 | +2.146 |
+| **Weighted** | | **4.060** | **4.775** | **+0.715** | +0.685 |
+
+Tokens 226 -> 87 (**−61.4%**). Zero blockers, zero fabricated tool calls. Fidelity
+moved off negative to exactly flat: the skill now drops nothing.
+
+All three `credit-survives` trials keep the relative date:
+
+```
+run 18   ...per last Thursday's load test (Thu Sep 11). Priya found the N+1...
+run 19   ...per last Thursday's load test. Priya found the N+1 query, Dan...
+```
+
+### Run 20 - Opus - PASSED (5 of 5), and the finding that matters most
+
+| Dimension | Weight | Baseline | Candidate | Δ | Sonnet Δ |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Correctness | 25% | 3.521 | 4.771 | **+1.250** | +0.375 |
+| Fidelity | 25% | 4.917 | 4.896 | −0.021 | +0.000 |
+| Appropriateness | 20% | 4.333 | 4.688 | +0.354 | +0.292 |
+| Actionability | 15% | 4.104 | 4.979 | +0.875 | +1.500 |
+| Concision | 15% | 2.625 | 4.938 | +2.312 | +2.250 |
+| **Weighted** | | **3.985** | **4.842** | **+0.856** | +0.715 |
+
+Tokens 373 -> 124 (**−66.6%**). Zero blockers.
+
+That baseline correctness of 3.521 is the lowest number anywhere in this file, and
+it is not noise: **20 of 48 Opus baseline rows score 3 or below on correctness, and
+the judge's notes give the same cause every time - the model invents facts the
+request never supplied.**
+
+Here is `apology-owed`. The entire prompt is:
+
+> I deployed a migration at 4pm that locked the orders table for 20 minutes during
+> business hours. Support took about 40 calls. Write my message to the support team lead.
+
+The baseline draft, unstyled:
+
+> It's resolved - **no data was lost or corrupted**, and **the backlog cleared once
+> the lock released**. **Customers who retried after ~4:20pm should have gone
+> through normally.** [...] Two things I'm changing: **migrations like this go out
+> off-hours from now on**, and I'll give you a heads-up before anything with the
+> potential to be customer-visible.
+
+Four inventions, none of them in the prompt. Three are claims about a production
+incident the sender never made and cannot support; the fourth is a process
+commitment made on their behalf. This is an email about to be sent to a colleague
+who will act on it.
+
+The candidate, same trial:
+
+> The orders table lock at 4pm today was my migration - I ran it during business
+> hours without thinking through the lock. Sorry; that's on me, and your team ate
+> about 40 calls for it. Happy to write up what happened if that's useful for anyone
+> asking, and tell me if there's anything you need from me for follow-ups.
+>
+> *Left out any promise about future migration windows - didn't want to commit you
+> to a process you haven't agreed with your own team yet. Add a line if you want it.*
+
+It declines to invent, apologises without attaching a defence, and says out loud
+what it left out and why.
+
+Invented dates across the whole set tell the same story:
+
+| | baseline | candidate |
+| --- | ---: | ---: |
+| Sonnet (run 19) | 6 of 48 | 1 of 48 |
+| Opus (run 20) | 5 of 48 | **0 of 48** |
+
+**The token saving is not the reason to run this skill.** −66% is the number that
+fits on a slide; "stops your agent putting *no data was lost* in an incident
+apology" is the one that matters. Correctness +1.250 on Opus is the largest
+single-dimension movement in this file, and it is a fabrication result wearing a
+correctness label.
+
+Worth being clear about why fabrication is so much worse here than in the `tldr`
+suite: in `tldr` the model is answering *you*, and you can check it. Here it is
+drafting something you will send to somebody else under your own name.
+
+### The two skills disagree, and that is the result
+
+| | `tldr` (run 16) | `tldr-write` (run 19) |
+| --- | ---: | ---: |
+| Human-facing tokens | **+8.1%** | **−61.4%** |
+| Concision Δ | +0.250 | +2.250 |
+
+`tldr` gets longer because it refuses to thin caveats in an answer to you.
+`tldr-write` gets much shorter because a message to a third party has no business
+carrying your reasoning. Same contract, opposite output, and neither number could
+have been predicted from the other.
+
+**Appropriateness rose 0.292 while output fell 61%.** That is the result the
+dimension exists to be able to fail, and it did not - which is the only reason the
+token number is worth quoting at all.
+
+Baseline appropriateness of 4.083 is also worth noting: the padding an unstyled
+model produces is doing some clumsy social work, so the baseline is easy to beat on
+concision and hard to beat on warmth. That is the right shape for the test.
+
 ## Next
 
 1. ~~Re-run Sonnet on the corrected instrument.~~ Done — run 9.

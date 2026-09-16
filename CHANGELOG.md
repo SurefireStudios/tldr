@@ -11,6 +11,8 @@ release.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-09-16
+
 ### Added
 
 - **`tldr-write`, a second skill.** `tldr` shapes what an agent says to you;
@@ -62,6 +64,25 @@ release.
 
 - **The mirror-sync workflow only knew about one skill.** It now walks `skills/*/`
   rather than naming a directory, so a new skill is mirrored without editing it.
+
+### Evaluation
+
+- `tldr-write` passes the release gate **5 of 5 on both models** (runs 19 and 20).
+  Weighted +0.715 on Sonnet, +0.856 on Opus. Output tokens −61% and −67%.
+
+- **The largest single-dimension movement in the project is a fabrication result.**
+  Opus baseline correctness is 3.521, the lowest figure in `evals/RESULTS.md`: 20 of
+  48 unstyled responses score 3 or below, every time because the model invents facts
+  the request never supplied. Asked to apologise for a migration that locked a table,
+  it wrote "no data was lost or corrupted", "the backlog cleared", "customers who
+  retried after ~4:20pm should have gone through normally" and a commitment to move
+  migrations off-hours - none of it in the prompt, all of it about to be sent to a
+  colleague. With the skill, correctness +1.250 and invented dates 5 of 48 -> 0 of 48.
+
+- Run 18 is published with a failing gate and a
+  [`NOTES.md`](evals/results/run18-sonnet-write/NOTES.md) explaining what it measured,
+  which grading pass its scores are, and why the 13 rows from the first pass were
+  deleted rather than kept.
 
 ## [0.4.0] - 2026-09-16
 

@@ -200,16 +200,38 @@ This one's cheat is cheaper. `"No."` is shorter than `"I can't this week — I'm
 
 So this suite grades **appropriateness at 20%** and floors it in the gate: *would the named recipient, reading this, feel respected?* A candidate that reads colder than baseline does not ship, however few tokens it used.
 
-| | Sonnet baseline | candidate | Δ |
-| --- | ---: | ---: | ---: |
-| Correctness | 4.479 | **4.854** | +0.375 |
-| Fidelity | 4.833 | **4.833** | +0.000 |
-| Appropriateness | 4.083 | **4.375** | +0.292 |
-| Actionability | 3.458 | **4.958** | +1.500 |
-| Concision | 2.646 | **4.896** | +2.250 |
-| Output tokens | 226 | **87** | **−61%** |
+| | Sonnet | | Opus | |
+| --- | ---: | --- | ---: | --- |
+| Correctness | 4.479 → **4.854** | +0.375 | 3.521 → **4.771** | **+1.250** |
+| Fidelity | 4.833 → **4.833** | +0.000 | 4.917 → **4.896** | −0.021 |
+| Appropriateness | 4.083 → **4.375** | +0.292 | 4.333 → **4.688** | +0.354 |
+| Actionability | 3.458 → **4.958** | +1.500 | 4.104 → **4.979** | +0.875 |
+| Concision | 2.646 → **4.896** | +2.250 | 2.625 → **4.938** | +2.312 |
+| Output tokens | 226 → **87** | **−61%** | 373 → **124** | **−67%** |
 
-Release gate passes 5 of 5. Appropriateness rising while output falls 61% is the result the dimension exists to be able to *fail*, and it didn't.
+Release gate passes 5 of 5 on both. Appropriateness rising while output falls two thirds is the result that dimension exists to be able to *fail*, and it didn't.
+
+### The number that isn't the token count
+
+Opus baseline correctness of 3.521 is the lowest figure anywhere in the eval results, and it has one cause: **an unstyled model invents facts when it drafts a message for you.** 20 of 48 baseline responses score 3 or below, every time for the same reason.
+
+The whole `apology-owed` prompt is: *"I deployed a migration at 4pm that locked the orders table for 20 minutes during business hours. Support took about 40 calls. Write my message to the support team lead."*
+
+The baseline draft:
+
+> It's resolved — **no data was lost or corrupted**, and **the backlog cleared once the lock released**. **Customers who retried after ~4:20pm should have gone through normally.** […] **migrations like this go out off-hours from now on**
+
+Four things nobody said. Three are claims about a production incident you cannot support; the fourth commits you to a process change. You were about to send that to a colleague.
+
+With the skill:
+
+> The orders table lock at 4pm today was my migration — I ran it during business hours without thinking through the lock. Sorry; that's on me, and your team ate about 40 calls for it. […]
+>
+> *Left out any promise about future migration windows — didn't want to commit you to a process you haven't agreed with your own team yet.*
+
+Invented dates, across the full set: Sonnet 6/48 → 1/48, **Opus 5/48 → 0/48**.
+
+−67% fewer tokens is the number that fits on a slide. "Stops your agent putting *no data was lost* in an incident apology" is the one that matters.
 
 ## Agent-to-agent: where the money is
 
