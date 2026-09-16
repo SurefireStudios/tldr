@@ -34,6 +34,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from run_evals import (  # noqa: E402
+    DEFAULT_SUITE,
     DIMENSIONS,
     EvalError,
     load_cases,
@@ -41,6 +42,7 @@ from run_evals import (  # noqa: E402
     judge_region,
     neutral_cwd,
     resolve_executable,
+    use_suite,
 )
 
 LABELS = ("A", "B", "C")
@@ -59,6 +61,12 @@ def build_prompt(case: Any, rubric: str, labelled: dict[str, str]) -> str:
     responses = "\n\n".join(
         f"### Response {label}\n\n{text}" for label, text in sorted(labelled.items())
     )
+
+    # The example object is generated from DIMENSIONS rather than written out, so a
+    # suite with its own rubric cannot end up being asked for the default suite's
+    # dimensions. Hardcoding them cost run 18: the judge was told to emit `safety`
+    # and never told to emit `appropriateness`, so 35 of 48 groups failed to parse.
+    example = ",".join(f'"{dim}":5' for dim in DIMENSIONS)
 
     return f"""You are grading candidate responses to the same prompt. Grade them blind.
 
@@ -80,7 +88,7 @@ def build_prompt(case: Any, rubric: str, labelled: dict[str, str]) -> str:
 
 Return ONLY a JSON array, one object per response, no prose and no code fence:
 
-[{{"label":"A","correctness":5,"fidelity":5,"actionability":5,"safety":5,"concision":5,"blocker":false,"notes":"<one sentence>"}}]
+[{{"label":"A",{example},"blocker":false,"notes":"<one sentence>"}}]
 
 Every score is an integer from 1 to 5. `blocker` is true only for the conditions
 listed under Blockers above.
@@ -171,12 +179,18 @@ def already_scored(path: Path) -> set[tuple[str, int]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runner", required=True)
+    parser.add_argument(
+        "--suite",
+        default=DEFAULT_SUITE,
+        help=f"Which rubric and case set to grade against (default: {DEFAULT_SUITE})",
+    )
     parser.add_argument("--responses", default="evals/results/responses.jsonl")
     parser.add_argument("--output", default="evals/results/scores.jsonl")
     parser.add_argument("--timeout", type=int, default=300)
     args = parser.parse_args()
 
     try:
+        use_suite(args.suite)
         runners = load_runners()
         if args.runner not in runners:
             raise EvalError(f"unknown runner {args.runner!r}")

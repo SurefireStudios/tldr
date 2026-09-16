@@ -11,6 +11,58 @@ release.
 
 ## [Unreleased]
 
+### Added
+
+- **`tldr-write`, a second skill.** `tldr` shapes what an agent says to you;
+  `tldr-write` shapes what you send to someone else - email, Slack, PR
+  descriptions, review comments, commit messages, status updates. The ask goes
+  first, the preamble and hedges and closers go entirely.
+
+  It is a separate skill rather than a mode because the shapes are incompatible:
+  a `**TL;DR**` header and a `--- detail ---` divider are absurd in an email, and
+  `SKILL.md` had one character of headroom in any case.
+
+  Model-invocable, unlike `tldr`. Asking for a PR description should not require
+  remembering a slash command first.
+
+  A never-cut list holds the line against the obvious failure: the ask and its
+  deadline, the blocker and who holds it, the decision-changing caveat, credit by
+  name, the apology if one is owed, bad news early and plain, cost and
+  irreversibility, and anything the reader asked to see in full.
+
+- **Eval suites.** `--suite` selects one skill's cases, rubric, dimension weights
+  and release gate. `tldr` is the default and its files stay where they were, so
+  every existing invocation behaves identically; other suites live in
+  `evals/suites/<name>/` with a `suite.json`. Threaded through `validate`, `plan`,
+  `run`, `score`, `judge.py` and `run_full_eval.sh`.
+
+- **Appropriateness, a graded dimension and a gate floor for `tldr-write`.**
+  Every compression skill has one dimension it can cheat on. For `tldr` it is
+  fidelity, because deleting wins. For a writing skill it is goodwill: `"No."` is
+  shorter than a kind refusal, loses nothing factual, and scores at least as well
+  on all five of the original dimensions. Appropriateness sits at 20% and is
+  floored in the gate, so a candidate that reads colder than baseline cannot ship
+  however few tokens it used.
+
+### Fixed
+
+- **The judge was asked for the wrong dimensions.** `judge.py` hardcoded the
+  default suite's five dimension names into its output-format example, so the
+  `tldr-write` grader was told to emit `safety` and never told to emit
+  `appropriateness`. 35 of 48 groups failed to parse, and the 13 that survived did
+  so by ignoring the example and reading the rubric table - a sample selected by
+  how carefully the judge disobeyed. The contract is now generated from the active
+  suite; `tests/test_eval_harness.py` pins it.
+
+- **`tldr-write` invented calendar dates.** "Name things exactly: dates, not
+  'soon'" was outranking "never invent a date", and the model resolved "last
+  Thursday" into a specific date - once into one that was not even a Thursday. The
+  rule now carries its precedence: a date handed to you as "last Thursday" stays
+  "last Thursday". Fabricated dates fell from 3 of 48 to 1 of 48.
+
+- **The mirror-sync workflow only knew about one skill.** It now walks `skills/*/`
+  rather than naming a directory, so a new skill is mirrored without editing it.
+
 ## [0.4.0] - 2026-09-16
 
 ### Skill

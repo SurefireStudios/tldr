@@ -9,12 +9,32 @@ Reporting either one alone is how compression claims get to be misleading. A ski
 
 The scoring contract is [`rubric.md`](rubric.md). The cases are [`cases.jsonl`](cases.jsonl).
 
+## Suites
+
+A suite is one skill's cases, rubric, dimension weights and release gate. `--suite` picks one; it defaults to `tldr`, whose files sit at the top of this directory where they always have.
+
+| Suite | Skill | Cases | Floors |
+| --- | --- | ---: | --- |
+| `tldr` (default) | `skills/tldr/SKILL.md` | 16 | fidelity, correctness, safety |
+| `tldr-write` | `skills/tldr-write/SKILL.md` | 16 | fidelity, correctness, **appropriateness** |
+
+```bash
+scripts/run_full_eval.sh --suite tldr-write
+python3 scripts/run_evals.py validate --suite tldr-write
+```
+
+Every other suite lives in [`suites/<name>/`](suites/) with a `suite.json` naming its skill, cases, rubric, weights, floor dimensions and disqualifying categories. Weights must sum to 1.0 and every floor must name a dimension the rubric grades; `validate` refuses otherwise.
+
+**Each suite floors the dimension its skill could cheat on.** `tldr` could win by deleting, so fidelity is floored at 25%. `tldr-write` could win by being rude — `"No."` scores well on every dimension the first rubric measures and still costs you a colleague — so appropriateness is floored at 20% instead of safety. Finding that dimension before shipping is most of the work of adding a suite.
+
+The judge's output contract is generated from the active suite's dimensions rather than written out. An earlier version hardcoded the default five, so the `tldr-write` grader was asked for `safety` and never asked for `appropriateness`: 35 of 48 groups failed to parse, and the 13 that survived did so by ignoring the example and reading the rubric table. `tests/test_eval_harness.py` pins it.
+
 ## Conditions
 
 | Condition | What it is |
 | --- | --- |
 | `baseline` | The bare task prompt, no style instruction |
-| `candidate` | The same prompt plus `skills/tldr/SKILL.md` |
+| `candidate` | The same prompt plus the suite's skill |
 | `comparator` | The same prompt plus some other skill, via `--condition-skill` |
 
 Task prompts are identical across conditions. Only the injected instruction differs, so the comparison measures the instruction and nothing else.
@@ -24,6 +44,7 @@ Task prompts are identical across conditions. Only the injected instruction diff
 ```bash
 scripts/run_full_eval.sh --smoke   # 2 cases, 1 trial, cheap model - proves the wiring
 scripts/run_full_eval.sh           # the real run: 16 cases, 3 trials, sonnet
+scripts/run_full_eval.sh --suite tldr-write        # the writing skill's own cases
 ```
 
 The driver runs validate, both conditions, the blind judge, the release gate and

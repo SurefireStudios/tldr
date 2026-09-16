@@ -17,6 +17,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILL = REPO_ROOT / "skills" / "tldr" / "SKILL.md"
 REFERENCE = REPO_ROOT / "skills" / "tldr" / "reference.md"
+WRITE_SKILL = REPO_ROOT / "skills" / "tldr-write" / "SKILL.md"
+WRITE_REFERENCE = REPO_ROOT / "skills" / "tldr-write" / "reference.md"
+WRITE_SUITE = REPO_ROOT / "evals" / "suites" / "tldr-write"
 README = REPO_ROOT / "README.md"
 INSTALL = REPO_ROOT / "INSTALL.md"
 
@@ -271,6 +274,106 @@ class TestCoreReferenceSplit(unittest.TestCase):
         ):
             with self.subTest(required=required):
                 self.assertIn(required, reference, f"brief mode section is missing {required!r}")
+
+
+class TestWriteSkill(unittest.TestCase):
+    """`tldr-write` shapes outbound messages. Its cheat is not length, it is curtness.
+
+    The `tldr` suite floors fidelity because that skill could win by deleting.
+    This one could win by being rude - `"No."` beats a kind refusal on every
+    dimension the original rubric measures - so appropriateness is both a graded
+    dimension and a gate floor, and these tests pin that it stays one.
+    """
+
+    CORE_MAX_CHARS = 5_000
+
+    def setUp(self) -> None:
+        self.core = WRITE_SKILL.read_text(encoding="utf-8").replace("\r\n", "\n")
+        self.reference = WRITE_REFERENCE.read_text(encoding="utf-8")
+        self.suite = json.loads((WRITE_SUITE / "suite.json").read_text(encoding="utf-8"))
+        self.rubric = (WRITE_SUITE / "rubric.md").read_text(encoding="utf-8")
+
+    def test_core_stays_under_the_size_budget(self) -> None:
+        self.assertLessEqual(
+            len(self.core), self.CORE_MAX_CHARS,
+            f"tldr-write SKILL.md is {len(self.core)} chars; the budget is "
+            f"{self.CORE_MAX_CHARS}. Move elaboration to reference.md.",
+        )
+
+    def test_core_points_at_its_reference(self) -> None:
+        self.assertTrue(WRITE_REFERENCE.exists())
+        self.assertIn("reference.md", self.core)
+
+    def test_core_ships_the_whole_never_cut_list(self) -> None:
+        section = self.core.split("## Never cut these", 1)[1].split("\n## ", 1)[0]
+        items = re.findall(r"(?m)^\s*\d+\.\s", section)
+        self.assertEqual(len(items), 8, "the never-cut list must ship complete in the core")
+
+    def test_core_names_warmth_in_the_contract(self) -> None:
+        """Brevity that costs goodwill is the failure mode; the contract has to say so.
+
+        Without this the skill reads as "be terse", and terse is exactly the cheat
+        the rubric weights against.
+        """
+        contract = self.core.split("## The contract", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("warmth", contract.lower())
+
+    def test_appropriateness_is_weighted_and_floored(self) -> None:
+        dims = self.suite["dimensions"]
+        self.assertIn("appropriateness", dims)
+        self.assertGreaterEqual(
+            dims["appropriateness"], 0.20,
+            "appropriateness is the dimension this skill can cheat on; weight it or "
+            "the cheat wins",
+        )
+        self.assertIn(
+            "appropriateness", self.suite["floor_dimensions"],
+            "a candidate that reads colder than baseline must not pass the gate",
+        )
+
+    def test_suite_weights_sum_to_one(self) -> None:
+        self.assertAlmostEqual(sum(self.suite["dimensions"].values()), 1.0, places=9)
+
+    def _judge_region(self) -> str:
+        """Exactly what the grader sees, extracted by the harness's own function.
+
+        A naive split on the bare marker text catches the explanatory comment's
+        own mention of it, which is a different region from the one that ships.
+        """
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        from run_evals import judge_region
+
+        return judge_region(WRITE_SUITE / "rubric.md")
+
+    def test_rubric_defines_appropriateness_for_the_judge(self) -> None:
+        self.assertIn("Appropriateness", self._judge_region())
+
+    def test_rubric_judge_region_does_not_name_the_conditions(self) -> None:
+        """Blinding is structural; leaking the vocabulary undoes it."""
+        region = self._judge_region().lower()
+        for word in ("baseline", "candidate", "comparator"):
+            with self.subTest(word=word):
+                self.assertNotIn(word, region)
+
+    def test_gate_floor_categories_have_cases(self) -> None:
+        cases = [
+            json.loads(line)
+            for line in (WRITE_SUITE / "cases.jsonl").read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertGreaterEqual(len(cases), 16)
+        categories = {c["category"] for c in cases}
+        for required in self.suite["hard_block_categories"]:
+            with self.subTest(category=required):
+                self.assertIn(required, categories)
+
+    def test_suite_validates(self) -> None:
+        result = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "scripts" / "run_evals.py"),
+             "validate", "--suite", "tldr-write"],
+            capture_output=True, text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 class TestMirrors(unittest.TestCase):

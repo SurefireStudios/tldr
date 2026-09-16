@@ -35,10 +35,19 @@ from pathlib import Path
 from typing import Any, Iterator
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+RUNNERS_PATH = REPO_ROOT / "evals" / "runners.example.json"
+
+# A suite is one skill's cases, rubric, weights and gate. "tldr" is the original
+# and lives at the top of evals/ where it always has; every other suite lives in
+# evals/suites/<name>/ with a suite.json describing it. The harness grades one
+# suite per invocation and the three module globals below are rebound to it.
+DEFAULT_SUITE = "tldr"
+SUITES_DIR = REPO_ROOT / "evals" / "suites"
+
 CASES_PATH = REPO_ROOT / "evals" / "cases.jsonl"
 RUBRIC_PATH = REPO_ROOT / "evals" / "rubric.md"
-RUNNERS_PATH = REPO_ROOT / "evals" / "runners.example.json"
 SKILL_PATH = REPO_ROOT / "skills" / "tldr" / "SKILL.md"
+SUITE_NAME = DEFAULT_SUITE
 
 CONDITIONS = ("baseline", "candidate", "comparator")
 REQUIRED_CASE_KEYS = {"id", "category", "prompt", "risk", "criteria"}
@@ -58,9 +67,59 @@ DIMENSIONS: dict[str, float] = {
     "concision": 0.10,
 }
 
+# Dimensions that may not fall more than 0.1 below baseline. These are the rules
+# that stop a skill winning by trading away the thing it must not trade away.
+FLOOR_DIMENSIONS: list[str] = ["fidelity", "correctness", "safety"]
+
 
 class EvalError(Exception):
     """A problem with the eval configuration or data, reported without a traceback."""
+
+
+def use_suite(name: str) -> None:
+    """Point the harness at one suite. Call once, before anything loads cases.
+
+    DIMENSIONS and HARD_BLOCK_CATEGORIES are mutated in place rather than
+    rebound: judge.py imports them by name, and rebinding here would leave that
+    module grading against the previous suite's weights without saying so.
+    """
+    global CASES_PATH, RUBRIC_PATH, SKILL_PATH, SUITE_NAME
+    SUITE_NAME = name
+    if name == DEFAULT_SUITE:
+        return
+
+    root = SUITES_DIR / name
+    config = root / "suite.json"
+    if not config.exists():
+        available = [DEFAULT_SUITE] + sorted(
+            p.parent.name for p in SUITES_DIR.glob("*/suite.json")
+        )
+        raise EvalError(f"Unknown suite {name!r}. Available: {', '.join(available)}")
+
+    spec = json.loads(config.read_text(encoding="utf-8"))
+    CASES_PATH = root / spec.get("cases", "cases.jsonl")
+    RUBRIC_PATH = root / spec.get("rubric", "rubric.md")
+    SKILL_PATH = REPO_ROOT / spec["skill"]
+
+    dims = spec.get("dimensions")
+    if dims:
+        total = sum(dims.values())
+        if abs(total - 1.0) > 1e-9:
+            raise EvalError(f"suite {name!r}: dimension weights sum to {total}, not 1.0")
+        DIMENSIONS.clear()
+        DIMENSIONS.update(dims)
+
+    floors = spec.get("floor_dimensions")
+    if floors:
+        unknown = [d for d in floors if d not in DIMENSIONS]
+        if unknown:
+            raise EvalError(f"suite {name!r}: floor_dimensions not in rubric: {unknown}")
+        FLOOR_DIMENSIONS[:] = floors
+
+    blocks = spec.get("hard_block_categories")
+    if blocks is not None:
+        HARD_BLOCK_CATEGORIES.clear()
+        HARD_BLOCK_CATEGORIES.update(blocks)
 
 
 # --------------------------------------------------------------------------- #
@@ -77,7 +136,8 @@ class Case:
     criteria: list[str]
 
 
-def load_cases(path: Path = CASES_PATH) -> list[Case]:
+def load_cases(path: Path | None = None) -> list[Case]:
+    path = path or CASES_PATH
     if not path.exists():
         raise EvalError(f"Cases file not found: {path}")
 
@@ -129,7 +189,8 @@ def load_cases(path: Path = CASES_PATH) -> list[Case]:
     return cases
 
 
-def judge_region(path: Path = RUBRIC_PATH) -> str:
+def judge_region(path: Path | None = None) -> str:
+    path = path or RUBRIC_PATH
     """Return only the region of the rubric that is safe to send to a blind grader.
 
     Everything outside the markers names the conditions, which would leak the
@@ -281,6 +342,7 @@ def cmd_validate(_args: argparse.Namespace) -> int:
     print(f"rubric:     {len(region.splitlines())} judge lines, {len(DIMENSIONS)} dimensions")
     print(f"runners:    {', '.join(sorted(runners))}")
     print(f"skill:      {SKILL_PATH.relative_to(REPO_ROOT)}")
+    print(f"suite:      {SUITE_NAME}")
     print()
     print("OK")
     return 0
@@ -612,13 +674,12 @@ def cmd_score(args: argparse.Namespace) -> int:
         print(f"  other          {entry}")
 
     # Release gate.
-    checks = [
-        ("no disqualifying blockers", not hard),
-        ("fidelity within 0.1 of baseline", deltas["fidelity"] >= -0.1),
-        ("correctness within 0.1 of baseline", deltas["correctness"] >= -0.1),
-        ("safety within 0.1 of baseline", deltas["safety"] >= -0.1),
-        ("weighted score beats baseline", cand_w > base_w),
+    checks = [("no disqualifying blockers", not hard)]
+    checks += [
+        (f"{dim} within 0.1 of baseline", deltas[dim] >= -0.1)
+        for dim in FLOOR_DIMENSIONS
     ]
+    checks.append(("weighted score beats baseline", cand_w > base_w))
 
     print()
     print("Release gate:")
@@ -642,13 +703,22 @@ def main(argv: list[str] | None = None) -> int:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("validate", help="Check cases, rubric, and runners").set_defaults(
+    def with_suite(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
+        p.add_argument(
+            "--suite",
+            default=DEFAULT_SUITE,
+            help=f"Which skill's cases, rubric and gate to use (default: {DEFAULT_SUITE})",
+        )
+        return p
+
+    with_suite(sub.add_parser("validate", help="Check cases, rubric, and runners")).set_defaults(
         func=cmd_validate
     )
 
     plan = sub.add_parser("plan", help="Print what a run would cost")
     plan.add_argument("--trials", type=int, default=3)
     plan.add_argument("--include-comparator", action="store_true")
+    with_suite(plan)
     plan.set_defaults(func=cmd_plan)
 
     run = sub.add_parser("run", help="Generate responses for one condition")
@@ -661,15 +731,18 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--retries", type=int, default=2)
     run.add_argument("--limit", type=int, help="Only run the first N cases. Use for a cheap smoke run.")
     run.add_argument("--cases", help="Comma-separated case ids to run instead of the whole set.")
+    with_suite(run)
     run.set_defaults(func=cmd_run)
 
     score = sub.add_parser("score", help="Apply the release gate to a scores file")
     score.add_argument("scores")
+    with_suite(score)
     score.set_defaults(func=cmd_score)
 
     args = parser.parse_args(argv)
 
     try:
+        use_suite(args.suite)
         return args.func(args)
     except EvalError as exc:
         print(f"error: {exc}", file=sys.stderr)

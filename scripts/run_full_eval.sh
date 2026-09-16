@@ -5,6 +5,7 @@
 #   scripts/run_full_eval.sh --smoke                # 2 cases, 1 trial, haiku
 #   scripts/run_full_eval.sh --runner claude-opus   # the expensive headline run
 #   scripts/run_full_eval.sh --trials 5
+#   scripts/run_full_eval.sh --suite tldr-write        # the writing skill's own cases
 #   scripts/run_full_eval.sh --out evals/results/run10-sonnet   # separate dir, so two
 #                                                              # models can run at once
 #
@@ -17,6 +18,7 @@ RUNNER="claude"
 TRIALS=3
 LIMIT=""
 OUT_DIR="evals/results"
+SUITE="tldr"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -25,6 +27,7 @@ while [ $# -gt 0 ]; do
     --trials) TRIALS="$2"; shift 2 ;;
     --limit)  LIMIT="--limit $2"; shift 2 ;;
     --out)    OUT_DIR="$2"; shift 2 ;;
+    --suite)  SUITE="$2"; shift 2 ;;
     -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -39,7 +42,7 @@ command -v $PY >/dev/null 2>&1 || PY=python
 say() { printf '\n\033[1m== %s\033[0m\n' "$1"; }
 
 say "Preflight"
-$PY scripts/run_evals.py validate || exit 1
+$PY scripts/run_evals.py validate --suite "$SUITE" || exit 1
 
 # A logged-out CLI produces 144 identical auth failures rather than an eval.
 # Catch it once, here, instead of at every call site.
@@ -59,30 +62,29 @@ fi
 
 if [ -z "$LIMIT" ]; then
   say "Plan"
-  $PY scripts/run_evals.py plan --trials "$TRIALS"
+  $PY scripts/run_evals.py plan --suite "$SUITE" --trials "$TRIALS"
 fi
 
 say "Generating: baseline"
-$PY scripts/run_evals.py run \
+$PY scripts/run_evals.py run --suite "$SUITE" \
   --runner "$RUNNER" --condition baseline \
   --trials "$TRIALS" $LIMIT --output "$RESPONSES" || exit 1
 
 say "Generating: candidate"
-$PY scripts/run_evals.py run \
+$PY scripts/run_evals.py run --suite "$SUITE" \
   --runner "$RUNNER" --condition candidate \
-  --condition-skill skills/tldr/SKILL.md \
   --trials "$TRIALS" $LIMIT --output "$RESPONSES" || exit 1
 
 say "Judging (blind)"
 # A judge failure on a few groups is recoverable: judging is resumable, so rerunning
 # fills the gaps. Aborting here would throw away a paid-for generation pass over one
 # bad group, so warn and carry on to scoring.
-$PY scripts/judge.py --runner "$RUNNER" \
+$PY scripts/judge.py --suite "$SUITE" --runner "$RUNNER" \
   --responses "$RESPONSES" --output "$SCORES" \
   || echo "  judge reported failures; rerun to fill the gaps before trusting the gate" >&2
 
 say "Quality and release gate"
-$PY scripts/run_evals.py score "$SCORES"
+$PY scripts/run_evals.py score --suite "$SUITE" "$SCORES"
 GATE=$?
 
 say "Token accounting"

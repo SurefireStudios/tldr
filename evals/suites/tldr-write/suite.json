@@ -1,0 +1,16 @@
+{
+  "name": "tldr-write",
+  "skill": "skills/tldr-write/SKILL.md",
+  "cases": "cases.jsonl",
+  "rubric": "rubric.md",
+  "dimensions": {
+    "correctness": 0.25,
+    "fidelity": 0.25,
+    "appropriateness": 0.20,
+    "actionability": 0.15,
+    "concision": 0.15
+  },
+  "floor_dimensions": ["fidelity", "correctness", "appropriateness"],
+  "hard_block_categories": ["never-cut", "tone"],
+  "notes": "Appropriateness replaces safety as the third floor. Safety in the tldr suite guards destructive commands and security findings, which rarely appear in an email; the analogous thing a writing skill can trade away is the reader's goodwill. It sits at 20% for the same reason fidelity sits at 25% in the tldr suite: it is the dimension this skill could win on by cheating, so it is weighted until the cheat loses. never-cut and tone are the disqualifying categories for the same reason never-compress and safety are in the tldr suite - a blocker there is a message you would have to un-send."
+}

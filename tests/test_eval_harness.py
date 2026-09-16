@@ -15,6 +15,7 @@ harness would have launched, and the assertions are on that.
 from __future__ import annotations
 
 import sys
+import types
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -166,3 +167,59 @@ class TestFabricationDetector(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestJudgeContractFollowsTheSuite(unittest.TestCase):
+    """The judge must be asked for the dimensions its suite actually grades.
+
+    Run 18 hardcoded the default suite's five names into the output-format
+    example. The tldr-write suite grades `appropriateness` and not `safety`, so
+    the grader was told to emit a key nobody wanted and never told to emit the
+    one the gate floors. 35 of 48 groups failed to parse, and the 13 that
+    survived did so because the model read the rubric table instead of the
+    example - a sample selected by how carefully the judge ignored its
+    instructions.
+    """
+
+    def _example_line(self, suite: str) -> str:
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import importlib
+
+        import run_evals
+
+        run_evals.use_suite(suite)
+        judge = importlib.import_module("judge")
+        importlib.reload(judge)
+
+        case = types.SimpleNamespace(prompt="prompt", criteria=["criterion"])
+        prompt = judge.build_prompt(case, "RUBRIC", {"A": "response"})
+        return next(line for line in prompt.splitlines() if line.startswith('[{'))
+
+    def test_every_suite_asks_for_its_own_dimensions(self) -> None:
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import run_evals
+
+        suites = [run_evals.DEFAULT_SUITE] + sorted(
+            p.parent.name for p in (REPO_ROOT / "evals" / "suites").glob("*/suite.json")
+        )
+        self.assertGreater(len(suites), 1, "expected at least one non-default suite")
+
+        for suite in suites:
+            with self.subTest(suite=suite):
+                line = self._example_line(suite)
+                run_evals.use_suite(suite)
+                for dim in run_evals.DIMENSIONS:
+                    self.assertIn(
+                        f'"{dim}"', line,
+                        f"suite {suite!r} grades {dim!r} but the judge is never asked for it",
+                    )
+
+    def test_judge_is_not_asked_for_dimensions_the_suite_does_not_grade(self) -> None:
+        """A key nobody scores is a key the judge spends attention inventing."""
+        sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import run_evals
+
+        line = self._example_line("tldr-write")
+        run_evals.use_suite("tldr-write")
+        self.assertNotIn('"safety"', line)
+        run_evals.use_suite(run_evals.DEFAULT_SUITE)

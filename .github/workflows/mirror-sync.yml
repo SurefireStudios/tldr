@@ -1,20 +1,25 @@
 name: Sync skill mirrors
 
-# `skills/tldr/` is the single source of truth: SKILL.md is the core, reference.md
-# the long form it links to. Harnesses that cannot read from that path get a copy,
-# and a copy that drifts is worse than no copy: two harnesses would follow two
-# different rulesets while both claiming to run tldr.
+# `skills/<name>/` is the single source of truth for each skill: SKILL.md is the
+# core, reference.md the long form it links to. Harnesses that cannot read from
+# that path get a copy, and a copy that drifts is worse than no copy: two
+# harnesses would follow two different rulesets while both claiming to run tldr.
 #
 # CI fails a pull request whose mirrors have drifted. This workflow fixes the
-# common case automatically after a merge, so contributors editing the canonical
+# common case automatically after a merge, so contributors editing a canonical
 # skill do not have to remember the copy step.
+#
+# The copy loop walks skills/*/ rather than naming them, so a new skill is
+# mirrored without editing this file. scripts/check_mirrors.py is still the
+# authority on which mirrors must exist; it fails the Verify step if this loop
+# missed one.
 
 on:
   push:
     branches: [main]
     paths:
-      - "skills/tldr/SKILL.md"
-      - "skills/tldr/reference.md"
+      - "skills/**/SKILL.md"
+      - "skills/**/reference.md"
   workflow_dispatch:
 
 permissions:
@@ -27,11 +32,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copy canonical skill to every mirror
+      - name: Copy every canonical skill to its mirror
         run: |
-          mkdir -p .cursor/skills/tldr
-          cp skills/tldr/SKILL.md .cursor/skills/tldr/SKILL.md
-          cp skills/tldr/reference.md .cursor/skills/tldr/reference.md
+          for dir in skills/*/; do
+            name=$(basename "$dir")
+            mkdir -p ".cursor/skills/$name"
+            for file in SKILL.md reference.md; do
+              if [ -f "$dir$file" ]; then
+                cp "$dir$file" ".cursor/skills/$name/$file"
+              fi
+            done
+          done
 
       - name: Verify
         run: python3 scripts/check_mirrors.py
@@ -44,6 +55,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .cursor/skills/tldr/SKILL.md .cursor/skills/tldr/reference.md
-          git commit -m "chore: sync skill mirrors with canonical skills/tldr"
+          git add .cursor/skills
+          git commit -m "chore: sync skill mirrors with the canonical skills/"
           git push

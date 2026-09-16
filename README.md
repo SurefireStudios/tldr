@@ -167,6 +167,50 @@ Turn it on as a mode, or fire it once at a specific thing:
 
 One-shot. No mode change.
 
+## `tldr-write`: the same idea, pointed outward
+
+`tldr` shapes what an agent says **to you**. It gets *longer* on the cases that matter, because it stops thinning caveats.
+
+`tldr-write` shapes what you send **to someone else** — an email, a Slack reply, a PR description, a review comment, a commit message. Different job, opposite output:
+
+```
+Before   Hi team! Hope everyone had a great weekend. I wanted to circle back on the
+         caching discussion we had last Tuesday. So, as you may recall, we were
+         debating whether to use Redis or in-process caching for the session store.
+         I took some time to look into it and I think, based on my analysis, that
+         Redis is probably the better option here, mainly because we run four app
+         servers and in-process caching would mean a user's session could land on a
+         server that does not have it. Anyway, let me know your thoughts! Happy to
+         discuss further. Thanks!
+
+After    Recommending Redis for the session store: we run four app servers, and
+         in-process caching means a user's session can land on one that doesn't
+         have it.
+```
+
+The ask goes first. Preamble, restated questions, hedge stacks and "Hope this helps!" go entirely. But **short is not the same as curt**, and a never-cut list holds the line: the ask and its deadline, the blocker and who holds it, the decision-changing caveat, credit by name, the apology if one is owed, bad news early and plain, cost and irreversibility.
+
+Turn it on with `/tldr-write`, or fire it once: `/tldr-write this PR description`.
+
+### Why it has its own rubric
+
+`tldr` could cheat by deleting, so its eval weights fidelity at 25%.
+
+This one's cheat is cheaper. `"No."` is shorter than `"I can't this week — I'm on call and shipping Thursday. Friday works if that helps."` Both decline, both are accurate, and on every dimension the first rubric measures, the rude one wins.
+
+So this suite grades **appropriateness at 20%** and floors it in the gate: *would the named recipient, reading this, feel respected?* A candidate that reads colder than baseline does not ship, however few tokens it used.
+
+| | Sonnet baseline | candidate | Δ |
+| --- | ---: | ---: | ---: |
+| Correctness | 4.479 | **4.854** | +0.375 |
+| Fidelity | 4.833 | **4.833** | +0.000 |
+| Appropriateness | 4.083 | **4.375** | +0.292 |
+| Actionability | 3.458 | **4.958** | +1.500 |
+| Concision | 2.646 | **4.896** | +2.250 |
+| Output tokens | 226 | **87** | **−61%** |
+
+Release gate passes 5 of 5. Appropriateness rising while output falls 61% is the result the dimension exists to be able to *fail*, and it didn't.
+
 ## Agent-to-agent: where the money is
 
 This is the half that other output-style skills do not do.
