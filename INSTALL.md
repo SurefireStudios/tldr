@@ -1,6 +1,13 @@
 # How to install tldr
 
-`tldr` is one folder — [`skills/tldr/`](skills/tldr/), holding a short `SKILL.md` the model reads every time and a `reference.md` it opens on demand — plus thin adapters for each of the 20 supported agents. There is no runtime and nothing to compile.
+This repo ships **two skills**, each one folder holding a short `SKILL.md` the model reads every time and a `reference.md` it opens on demand, plus thin adapters for each of the 20 supported agents. There is no runtime and nothing to compile.
+
+| Skill | Shapes | Turn on with |
+| --- | --- | --- |
+| [`skills/tldr/`](skills/tldr/) | what the agent says **to you** | `/tldr` |
+| [`skills/tldr-write/`](skills/tldr-write/) | what you send **to someone else** — email, Slack, PR bodies, review comments, commits | `/tldr-write` |
+
+Every plugin and extension install below picks up **both**, because the manifests point at the `skills/` directory rather than naming a skill. The manual copy instructions show `skills/tldr/`; copy `skills/tldr-write/` the same way alongside it if you want both.
 
 **Jump to your agent:**
 [Claude Code](#claude-code) ·

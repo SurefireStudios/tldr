@@ -119,6 +119,66 @@ Ligue como modo, ou dispare uma vez sobre algo específico:
 
 Uma vez só. Sem mudar de modo.
 
+## `tldr-write`: a mesma ideia, voltada para fora
+
+`tldr` molda o que um agente diz **para você**, e nos casos que importam ele fica *mais longo*, porque para de afinar as ressalvas.
+
+`tldr-write` molda o que você envia **para outra pessoa**: um e-mail, uma resposta no Slack, a descrição de um PR, um comentário de revisão, uma mensagem de commit. Outro trabalho, resultado oposto:
+
+```
+Antes    Oi pessoal! Espero que todos tenham tido um ótimo fim de semana. Queria
+         retomar a discussão sobre cache que tivemos na terça passada. Como vocês
+         devem lembrar, estávamos debatendo entre Redis e cache em processo para o
+         armazenamento de sessões. Pesquisei um pouco e acho que, pela minha
+         análise, o Redis é provavelmente a melhor opção, principalmente porque
+         rodamos quatro servidores de aplicação e com cache em processo a sessão de
+         um usuário pode cair num servidor que não a tem. Enfim, me digam o que
+         acham! Obrigado!
+
+Depois   Recomendo o Redis para o armazenamento de sessões: rodamos quatro
+         servidores de aplicação, e com cache em processo a sessão de um usuário
+         pode cair num que não a tem.
+```
+
+O pedido vem primeiro. O preâmbulo, a pergunta repetida, os rodeios e o "espero ter ajudado!" somem. Mas **curto não é o mesmo que seco**, e uma lista do que nunca se corta segura a linha: o pedido e o prazo, o bloqueio e quem o detém, a ressalva que mudaria a decisão, o crédito com nomes, o pedido de desculpas se for devido, a má notícia cedo e sem rodeios, o custo e o irreversível.
+
+Ligue com `/tldr-write`, ou use uma vez só: `/tldr-write esta descrição de PR`.
+
+### Por que tem a própria rubrica
+
+`tldr` podia trapacear apagando, então sua avaliação pesa fidelidade em 25%.
+
+A trapaça desta skill é mais barata. `"Não."` é mais curto que `"Essa semana não dá — estou de plantão e liberando na quinta. Sexta eu leio direito, se ajudar."` As duas recusam, as duas são exatas, e em todas as dimensões que a primeira rubrica mede a grosseira vence.
+
+Por isso esta suíte pontua **adequação em 20%** e a exige no critério de publicação: *a pessoa que recebe isso se sentiria respeitada?* Um candidato mais frio que a linha de base não é publicado, por menos tokens que use.
+
+| | Sonnet | | Opus | |
+| --- | ---: | --- | ---: | --- |
+| Correção | 4.479 → **4.854** | +0.375 | 3.521 → **4.771** | **+1.250** |
+| Fidelidade | 4.833 → **4.833** | +0.000 | 4.917 → **4.896** | −0.021 |
+| Adequação | 4.083 → **4.375** | +0.292 | 4.333 → **4.688** | +0.354 |
+| Acionabilidade | 3.458 → **4.958** | +1.500 | 4.104 → **4.979** | +0.875 |
+| Concisão | 2.646 → **4.896** | +2.250 | 2.625 → **4.938** | +2.312 |
+| Tokens de saída | 226 → **87** | **−61%** | 373 → **124** | **−67%** |
+
+Passa nas cinco regras nos dois modelos.
+
+### O número que não é a contagem de tokens
+
+A correção da linha de base no Opus, 3.521, é o menor valor de todo o arquivo de resultados, e tem uma causa só: **um modelo sem a skill inventa fatos quando redige uma mensagem por você.** 20 de 48 respostas base pontuam 3 ou menos, sempre pelo mesmo motivo.
+
+O enunciado inteiro de um caso é: *"Subi uma migração às 16h que travou a tabela de pedidos por 20 minutos em horário comercial. O suporte atendeu umas 40 ligações. Escreva minha mensagem para o líder do suporte."*
+
+O rascunho sem a skill:
+
+> Já está resolvido — **nenhum dado foi perdido ou corrompido**, e **a fila esvaziou assim que o lock foi liberado**. **Quem tentou de novo depois das 16h20 deve ter passado normalmente.** […] **migrações assim passam a sair fora do horário comercial**
+
+Quatro coisas que ninguém disse. Três são afirmações sobre um incidente em produção que você não consegue sustentar; a quarta te compromete com uma mudança de processo. E você ia enviar isso para um colega.
+
+Datas inventadas no conjunto completo: Sonnet 6/48 → 1/48, **Opus 5/48 → 0/48**.
+
+67% menos tokens é o número que cabe num slide. "Impede seu agente de escrever *nenhum dado foi perdido* num pedido de desculpas por incidente" é o que importa.
+
 ## Agente para agente: onde está o dinheiro
 
 Esta é a metade que outras skills de estilo de saída não cobrem.

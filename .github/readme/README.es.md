@@ -119,6 +119,65 @@ Actívalo como modo, o dispáralo una sola vez sobre algo concreto:
 
 De una sola vez. Sin cambiar de modo.
 
+## `tldr-write`: la misma idea, hacia fuera
+
+`tldr` da forma a lo que un agente te dice **a ti**, y en los casos que importan se alarga, porque deja de adelgazar las advertencias.
+
+`tldr-write` da forma a lo que tú envías **a otra persona**: un correo, una respuesta en Slack, la descripción de un PR, un comentario de revisión, un mensaje de commit. Otro trabajo, resultado opuesto:
+
+```
+Antes    ¡Hola equipo! Espero que hayáis tenido un buen fin de semana. Quería
+         retomar la discusión sobre caché que tuvimos el martes pasado. Como
+         recordaréis, debatíamos entre Redis y caché en proceso para el almacén de
+         sesiones. He estado investigando y creo que, según mi análisis, Redis es
+         probablemente la mejor opción, sobre todo porque tenemos cuatro servidores
+         de aplicación y con caché en proceso la sesión de un usuario podría acabar
+         en un servidor que no la tiene. En fin, ¡decidme qué os parece! ¡Gracias!
+
+Después  Propongo Redis para el almacén de sesiones: tenemos cuatro servidores de
+         aplicación, y con caché en proceso la sesión de un usuario puede acabar en
+         uno que no la tiene.
+```
+
+La petición va primero. El preámbulo, las preguntas repetidas, los rodeos y el «¡espero que te sirva!» desaparecen. Pero **breve no es lo mismo que seco**, y una lista de lo que nunca se recorta sostiene el límite: la petición y su fecha, el bloqueo y quién lo tiene, la advertencia que cambiaría la decisión, el crédito con nombres, la disculpa si se debe, las malas noticias pronto y claras, el coste y lo irreversible.
+
+Se activa con `/tldr-write`, o se usa una sola vez: `/tldr-write esta descripción de PR`.
+
+### Por qué tiene su propia rúbrica
+
+`tldr` podía hacer trampa borrando, así que su evaluación pondera la fidelidad al 25%.
+
+La trampa de esta skill es más barata. `«No.»` es más corto que `«Esta semana no puedo: estoy de guardia y publico el jueves. El viernes lo miro bien si te sirve.»` Ambas rechazan, ambas son exactas, y en todas las dimensiones que mide la primera rúbrica gana la grosera.
+
+Por eso esta suite puntúa la **adecuación al 20%** y la exige en el criterio de publicación: *¿la persona que recibe esto se sentiría respetada?* Un candidato que suene más frío que la línea base no se publica, por pocos tokens que use.
+
+| | Sonnet | | Opus | |
+| --- | ---: | --- | ---: | --- |
+| Corrección | 4.479 → **4.854** | +0.375 | 3.521 → **4.771** | **+1.250** |
+| Fidelidad | 4.833 → **4.833** | +0.000 | 4.917 → **4.896** | −0.021 |
+| Adecuación | 4.083 → **4.375** | +0.292 | 4.333 → **4.688** | +0.354 |
+| Accionabilidad | 3.458 → **4.958** | +1.500 | 4.104 → **4.979** | +0.875 |
+| Concisión | 2.646 → **4.896** | +2.250 | 2.625 → **4.938** | +2.312 |
+| Tokens de salida | 226 → **87** | **−61%** | 373 → **124** | **−67%** |
+
+Pasa las cinco reglas en ambos modelos.
+
+### El número que no es el recuento de tokens
+
+La corrección de la línea base en Opus, 3.521, es la cifra más baja de todo el archivo de resultados, y tiene una sola causa: **un modelo sin la skill se inventa hechos cuando redacta un mensaje por ti.** 20 de 48 respuestas base puntúan 3 o menos, siempre por lo mismo.
+
+El enunciado completo de un caso es: *«Desplegué una migración a las 16:00 que bloqueó la tabla de pedidos durante 20 minutos en horario laboral. Soporte atendió unas 40 llamadas. Escribe mi mensaje al responsable de soporte.»*
+
+El borrador sin la skill:
+
+> Ya está resuelto: **no se perdió ni se corrompió ningún dato**, y **la cola se vació al liberarse el bloqueo**. **Quien reintentara después de las 16:20 debería haber pasado sin problema.** […] **a partir de ahora estas migraciones salen fuera de horario**
+
+Cuatro cosas que nadie dijo. Tres son afirmaciones sobre un incidente en producción que no puedes sostener; la cuarta te compromete a un cambio de proceso. Y estabas a punto de enviárselo a un compañero.
+
+Fechas inventadas en el conjunto completo: Sonnet 6/48 → 1/48, **Opus 5/48 → 0/48**.
+
+Un 67% menos de tokens es la cifra que cabe en una diapositiva. «Evita que tu agente escriba *no se perdió ningún dato* en una disculpa por un incidente» es la que importa.
+
 ## Agente a agente: donde está el dinero
 
 Esta es la mitad que otras skills de estilo de salida no cubren.
